@@ -1,7 +1,7 @@
 # Headset Control Center
 
-[![CI](https://github.com/debbiedi/headset-control-center/actions/workflows/ci.yml/badge.svg)](https://github.com/debbiedi/headset-control-center/actions/workflows/ci.yml)
 [![Licence: MIT](https://img.shields.io/badge/licence-MIT-d9a441.svg)](LICENSE)
+[![Platform: Linux](https://img.shields.io/badge/platform-Linux-2a3238.svg)](#requirements)
 
 A desktop control panel for USB gaming headsets on Linux. Tauri v2 and React in
 front, Rust and hidapi behind.
@@ -49,26 +49,34 @@ Other headsets are not supported yet, and will not be added on guesswork — see
 
 ### AppImage
 
-Download the AppImage from [Releases](../../releases), make it executable, run
-it. Nothing is installed.
+Download it from [Releases](../../releases), make it executable, run it.
+Nothing is installed.
 
 ```bash
-chmod +x 'Headset Control Center_0.1.0_amd64.AppImage'
-./'Headset Control Center_0.1.0_amd64.AppImage'
+chmod +x headset-control-center-0.1.0-x86_64.AppImage
+./headset-control-center-0.1.0-x86_64.AppImage
 ```
 
-### Debian / Ubuntu
+**Read this before downloading.** The published AppImage was built on Arch
+Linux against **glibc 2.44**, so it starts only on an equally recent
+distribution — current Arch, Fedora Rawhide and similar. On Ubuntu or Debian it
+will refuse to run with a `GLIBC_2.4x not found` error. That is not a bug you
+need to report; it is what happens when a binary meets an older C library than
+it was linked against.
 
-```bash
-sudo apt install ./headset-control-center_0.1.0_amd64.deb
-```
+Packages built on Ubuntu 22.04, which run everywhere from glibc 2.35 upwards,
+are what [the CI workflow](.github/workflows/ci.yml) produces on a tag. Until
+those appear here, Debian and Ubuntu users should build from source — it takes
+about five minutes and the instructions are below.
 
-Then launch **Headset Control Center** from your applications menu.
+### Debian, Ubuntu, and anything older
+
+Build from source. See below.
 
 ### Arch Linux
 
-No AUR package yet. Build from source, below — the dependencies are all in the
-official repositories.
+No AUR package yet. The AppImage above works, or build from source — every
+dependency is in the official repositories.
 
 ### Requirements
 
