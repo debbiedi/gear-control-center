@@ -18,6 +18,6 @@ pkgbase = headset-control-center
 	depends = hicolor-icon-theme
 	options = !lto
 	source = headset-control-center-0.1.1.tar.gz::https://github.com/debbiedi/headset-control-center/archive/refs/tags/v0.1.1.tar.gz
-	sha256sums = 86e9b9a6482df567e7dd504c9c58c4f55634925a9556baceaf217d89115d98ca
+	sha256sums = 735128c76c9bf56ae39bc2e147da7da5b5f750999deaab6b5ef9abeb159dc9dc
 
 pkgname = headset-control-center
