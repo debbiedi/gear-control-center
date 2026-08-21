@@ -1,4 +1,5 @@
 import { Check, Minus } from "lucide-react";
+import { useT } from "@/i18n";
 import { capabilityRows } from "@/lib/capabilities";
 import { cn } from "@/lib/cn";
 import type { Capabilities } from "@/types/device";
@@ -9,9 +10,10 @@ import type { Capabilities } from "@/types/device";
  * than a line that says the headset has no lighting.
  */
 export function CapabilityTable({ capabilities }: { capabilities: Capabilities }) {
+  const t = useT();
   return (
     <ul className="divide-y divide-line">
-      {capabilityRows(capabilities).map((row) => (
+      {capabilityRows(capabilities, t).map((row) => (
         <li
           key={row.label}
           className="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0"
@@ -36,7 +38,7 @@ export function CapabilityTable({ capabilities }: { capabilities: Capabilities }
             >
               {row.label}
               <span className="sr-only">
-                {row.supported ? " — supported" : " — not supported"}
+                {` — ${row.supported ? t.device.supported : t.device.unsupported}`}
               </span>
             </p>
             <p className="selectable mt-0.5 text-[12.5px] leading-snug text-ink-dim">

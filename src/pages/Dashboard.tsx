@@ -1,16 +1,17 @@
 import { Mic, MicOff, Volume2, VolumeX } from "lucide-react";
 import { BalanceMeter } from "@/components/ui/BalanceMeter";
 import { Button } from "@/components/ui/Button";
-import { Slider } from "@/components/ui/Slider";
-import { StepSelector } from "@/components/ui/StepSelector";
-import { useDeviceValue } from "@/lib/useDeviceValue";
-import { deviceService } from "@/services/device";
-import { mixerPercent } from "@/types/device";
 import { Notice } from "@/components/ui/Notice";
 import { Panel } from "@/components/ui/Panel";
 import { SegmentedGauge } from "@/components/ui/SegmentedGauge";
+import { Slider } from "@/components/ui/Slider";
 import { StatusLamp } from "@/components/ui/StatusLamp";
+import { StepSelector } from "@/components/ui/StepSelector";
+import { term, useT } from "@/i18n";
+import { useDeviceValue } from "@/lib/useDeviceValue";
+import { deviceService } from "@/services/device";
 import { useDeviceStore } from "@/stores/deviceStore";
+import { mixerPercent } from "@/types/device";
 import type { DiscoveredDevice, Snapshot } from "@/types/device";
 import { EmptyState } from "./EmptyState";
 
@@ -25,34 +26,31 @@ function Reading({ label, value }: { label: string; value: string }) {
 
 /** Present but unopenable — almost always another application holding it. */
 function ConflictNotice({ device }: { device: DiscoveredDevice }) {
+  const t = useT();
   const setMockMode = useDeviceStore((s) => s.setMockMode);
 
   return (
     <Notice
       tone="warn"
-      title={`${device.info.name} is connected but cannot be opened`}
+      title={t.conflict.title(device.info.name)}
       actions={
         <button
           type="button"
           onClick={() => void setMockMode(true)}
           className="text-[13px] font-medium text-brass hover:underline"
         >
-          Work with a simulated device instead
+          {t.conflict.useSimulatedInstead}
         </button>
       }
     >
       <p>{device.unavailable}</p>
-      <p className="mt-2">
-        Another application is holding the control interface. On this system that
-        is usually a background service; stopping it releases the headset:
-      </p>
+      <p className="mt-2">{t.conflict.explain}</p>
       <p className="readout mt-2 rounded border border-line bg-ground px-2.5 py-1.5 text-[12px]">
         systemctl --user stop arctis-manager
       </p>
-      <p className="mt-2 text-[12.5px]">
-        Nothing on your system has been changed — run that yourself if you want
-        this application to take over, and re-enable it later with{" "}
-        <span className="readout">systemctl --user start arctis-manager</span>.
+      <p className="mt-2 text-[12.5px]">{t.conflict.nothingChanged}</p>
+      <p className="readout mt-2 rounded border border-line bg-ground px-2.5 py-1.5 text-[12px]">
+        systemctl --user start arctis-manager
       </p>
     </Notice>
   );
@@ -65,30 +63,31 @@ function ConflictNotice({ device }: { device: DiscoveredDevice }) {
  * or queued, so there is no "apply" button to leave a setting in doubt.
  */
 function QuickControls({ snapshot }: { snapshot: Snapshot }) {
+  const t = useT();
   const run = useDeviceStore((s) => s.run);
   const playback = snapshot.audio?.playback ?? null;
   const capture = snapshot.audio?.capture ?? null;
   const sidetone = snapshot.capabilities?.sidetone ?? null;
 
   const [volume, setVolume] = useDeviceValue(playback?.value ?? 0, (value) =>
-    run("Setting the volume", () => deviceService.setVolume(value)),
+    run(t.actions.settingVolume, () => deviceService.setVolume(value)),
   );
 
   if (!playback && !capture && !sidetone) return null;
 
   return (
-    <Panel legend="Controls" title="Quick controls">
+    <Panel legend={t.dashboard.controlsLegend} title={t.dashboard.controlsTitle}>
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_auto]">
         {playback && (
           <Slider
-            label="Output volume"
+            label={t.dashboard.outputVolume}
             value={volume}
             min={playback.min}
             max={playback.max}
             onChange={setVolume}
             disabled={playback.muted}
             readout={`${mixerPercent({ ...playback, value: volume })}%`}
-            detail={`${playback.max - playback.min + 1} hardware steps`}
+            detail={t.dashboard.hardwareSteps(playback.max - playback.min + 1)}
           />
         )}
         <div className="flex items-end gap-2">
@@ -97,10 +96,12 @@ function QuickControls({ snapshot }: { snapshot: Snapshot }) {
               variant={playback.muted ? "primary" : "secondary"}
               icon={playback.muted ? <VolumeX size={14} /> : <Volume2 size={14} />}
               onClick={() =>
-                run("Changing mute", () => deviceService.setMuted(!playback.muted))
+                run(t.actions.changingMute, () =>
+                  deviceService.setMuted(!playback.muted),
+                )
               }
             >
-              {playback.muted ? "Unmute" : "Mute"}
+              {playback.muted ? t.dashboard.unmute : t.dashboard.mute}
             </Button>
           )}
           {capture && (
@@ -108,12 +109,12 @@ function QuickControls({ snapshot }: { snapshot: Snapshot }) {
               variant={capture.muted ? "primary" : "secondary"}
               icon={capture.muted ? <MicOff size={14} /> : <Mic size={14} />}
               onClick={() =>
-                run("Changing the microphone mute", () =>
+                run(t.actions.changingMicMute, () =>
                   deviceService.setMicrophoneMuted(!capture.muted),
                 )
               }
             >
-              {capture.muted ? "Unmute mic" : "Mute mic"}
+              {capture.muted ? t.dashboard.unmuteMic : t.dashboard.muteMic}
             </Button>
           )}
         </div>
@@ -122,11 +123,13 @@ function QuickControls({ snapshot }: { snapshot: Snapshot }) {
       {sidetone && (
         <div className="mt-6 border-t border-line pt-5">
           <StepSelector
-            label="Sidetone"
-            options={sidetone.labels}
+            label={t.dashboard.sidetone}
+            options={sidetone.labels.map((l) => term(l, t))}
             value={snapshot.state?.sidetone_level ?? null}
             onChange={(index) =>
-              run("Setting sidetone", () => deviceService.setSidetone(index))
+              run(t.actions.settingSidetone, () =>
+                deviceService.setSidetone(index),
+              )
             }
           />
         </div>
@@ -136,6 +139,7 @@ function QuickControls({ snapshot }: { snapshot: Snapshot }) {
 }
 
 export function Dashboard({ snapshot }: { snapshot: Snapshot | null }) {
+  const t = useT();
   const discovered = useDeviceStore((s) => s.discovered);
   const blocked = discovered.find((d) => d.unavailable);
 
@@ -160,15 +164,14 @@ export function Dashboard({ snapshot }: { snapshot: Snapshot | null }) {
   return (
     <div className="space-y-4 p-6">
       {snapshot.hostError && (
-        <Notice tone="fault" title="Hardware access unavailable">
+        <Notice tone="fault" title={t.dashboard.hostErrorTitle}>
           {snapshot.hostError}
         </Notice>
       )}
 
       {device.is_mock && (
-        <Notice tone="info" title="Simulated device">
-          These readings are generated by the application, not by a headset.
-          Turn this off in Settings once real hardware is connected.
+        <Notice tone="info" title={t.dashboard.simulatedTitle}>
+          {t.dashboard.simulatedBody}
         </Notice>
       )}
 
@@ -177,7 +180,7 @@ export function Dashboard({ snapshot }: { snapshot: Snapshot | null }) {
       <QuickControls snapshot={snapshot} />
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <Panel legend="Power" title="Battery">
+        <Panel legend={t.dashboard.powerLegend} title={t.dashboard.batteryTitle}>
           {capabilities?.battery && battery ? (
             <div className="space-y-4">
               <div className="flex items-end gap-4">
@@ -193,99 +196,106 @@ export function Dashboard({ snapshot }: { snapshot: Snapshot | null }) {
                 />
               </div>
               <StatusLamp
-                tone={battery.charging ? "live" : battery.percent <= 25 ? "warn" : "idle"}
+                tone={
+                  battery.charging ? "live" : battery.percent <= 25 ? "warn" : "idle"
+                }
                 label={
                   battery.charging
-                    ? "Charging over USB"
+                    ? t.dashboard.chargingOverUsb
                     : battery.percent <= 25
-                      ? "Low — charge soon"
-                      : "Running on battery"
+                      ? t.dashboard.lowChargeSoon
+                      : t.dashboard.runningOnBattery
                 }
               />
               <p className="text-[12.5px] leading-snug text-ink-dim">
-                The headset reports {capabilities.battery.steps} levels rather
-                than a percentage, so this figure moves in steps. It is what the
-                device sent, not an estimate.
+                {t.dashboard.batteryResolution(capabilities.battery.steps)}
               </p>
             </div>
           ) : (
             <p className="text-[13px] text-ink-dim">
               {capabilities?.battery
-                ? "The headset is switched off, so it is not reporting a battery level."
-                : "This device does not report a battery level."}
+                ? t.dashboard.batteryOff
+                : t.dashboard.batteryUnsupported}
             </p>
           )}
         </Panel>
 
-        <Panel legend="Mix" title="ChatMix">
+        <Panel legend={t.dashboard.mixLegend} title={t.dashboard.chatmixTitle}>
           {capabilities?.chatmix && chatmix ? (
             <div className="space-y-4">
               <BalanceMeter game={chatmix.game} chat={chatmix.chat} />
               <div className="grid grid-cols-2 gap-4">
-                <Reading label="Game" value={`${chatmix.game} / 100`} />
-                <Reading label="Chat" value={`${chatmix.chat} / 100`} />
+                <Reading label={t.dashboard.game} value={`${chatmix.game} / 100`} />
+                <Reading label={t.dashboard.chat} value={`${chatmix.chat} / 100`} />
               </div>
               <p className="text-[12.5px] leading-snug text-ink-dim">
-                The dial is on the headset itself. This shows where it is set;
-                it cannot be moved from here.
+                {t.dashboard.chatmixExplain}
               </p>
             </div>
           ) : (
             <p className="text-[13px] text-ink-dim">
               {capabilities?.chatmix
-                ? "The headset is switched off, so the dial position is not being reported."
-                : "This device has no ChatMix dial."}
+                ? t.dashboard.chatmixOff
+                : t.dashboard.chatmixUnsupported}
             </p>
           )}
         </Panel>
       </div>
 
       <Panel
-        legend="Status"
-        title="Live readings"
-        description="Values as last received from the device."
+        legend={t.dashboard.statusLegend}
+        title={t.dashboard.liveTitle}
+        description={t.dashboard.liveDescription}
       >
         <div className="grid grid-cols-2 gap-y-5 sm:grid-cols-4">
-          <Reading label="Power" value={state?.powered_on ? "On" : "Off"} />
           <Reading
-            label="Sidetone"
+            label={t.dashboard.power}
+            value={state?.powered_on ? t.dashboard.on : t.dashboard.off}
+          />
+          <Reading
+            label={t.dashboard.sidetone}
             value={
               capabilities?.sidetone
                 ? state?.sidetone_level != null
-                  ? (capabilities.sidetone.labels[state.sidetone_level] ??
-                    String(state.sidetone_level))
-                  : "Not read back"
-                : "Not supported"
+                  ? term(
+                      capabilities.sidetone.labels[state.sidetone_level] ??
+                        String(state.sidetone_level),
+                      t,
+                    )
+                  : t.dashboard.notReadBack
+                : t.dashboard.notSupported
             }
           />
           <Reading
-            label="Auto shut-off"
+            label={t.dashboard.autoShutOff}
             value={
               capabilities?.inactive_time
                 ? state?.inactive_minutes != null
-                  ? `${state.inactive_minutes} min`
-                  : "Not read back"
-                : "Not supported"
+                  ? t.dashboard.minutes(state.inactive_minutes)
+                  : t.dashboard.notReadBack
+                : t.dashboard.notSupported
             }
           />
           <Reading
-            label="Equaliser"
+            label={t.dashboard.equaliser}
             value={
               capabilities?.equalizer
                 ? state?.equalizer_preset != null
-                  ? (capabilities.equalizer.preset_names[state.equalizer_preset] ??
-                    "Custom")
+                  ? term(
+                      capabilities.equalizer.preset_names[
+                        state.equalizer_preset
+                      ] ?? t.dashboard.custom,
+                      t,
+                    )
                   : state?.equalizer_db
-                    ? "Custom"
-                    : "Not read back"
-                : "Not supported"
+                    ? t.dashboard.custom
+                    : t.dashboard.notReadBack
+                : t.dashboard.notSupported
             }
           />
         </div>
         <p className="mt-5 border-t border-line pt-4 text-[12.5px] leading-snug text-ink-dim">
-          "Not read back" means the headset accepts the setting but offers no way
-          to ask for its current value. This build shows what it was told, and
-          shows nothing after a reconnect rather than guessing.
+          {t.dashboard.notReadBackExplain}
         </p>
       </Panel>
     </div>

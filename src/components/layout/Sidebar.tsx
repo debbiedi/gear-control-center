@@ -9,6 +9,7 @@ import {
   Volume2,
 } from "lucide-react";
 import { StatusLamp } from "@/components/ui/StatusLamp";
+import { useT } from "@/i18n";
 import { cn } from "@/lib/cn";
 import { connectionLabel, connectionTone } from "@/types/device";
 import type { Capabilities, Snapshot } from "@/types/device";
@@ -24,7 +25,6 @@ export type View =
 
 interface NavItem {
   id: View;
-  label: string;
   Icon: LucideIcon;
   /** Whether the connected device has anything for this section to control. */
   supported?: (caps: Capabilities) => boolean;
@@ -39,33 +39,21 @@ interface NavItem {
  * usable and the pages explain what they need.
  */
 const NAV: NavItem[] = [
-  { id: "dashboard", label: "Dashboard", Icon: LayoutDashboard },
-  {
-    id: "audio",
-    label: "Audio",
-    Icon: Volume2,
-    supported: (c) => c.volume || c.mute,
-  },
+  { id: "dashboard", Icon: LayoutDashboard },
+  { id: "audio", Icon: Volume2, supported: (c) => c.volume || c.mute },
   {
     id: "microphone",
-    label: "Microphone",
     Icon: Mic,
     supported: (c) => c.microphone_volume || c.microphone_mute || !!c.sidetone,
   },
   {
     id: "equalizer",
-    label: "Equaliser",
     Icon: SlidersHorizontal,
     supported: (c) => c.equalizer !== null,
   },
-  {
-    id: "profiles",
-    label: "Profiles",
-    Icon: BookMarked,
-    supported: (c) => c.software_profiles,
-  },
-  { id: "device", label: "Device", Icon: Headphones },
-  { id: "settings", label: "Settings", Icon: Settings2 },
+  { id: "profiles", Icon: BookMarked, supported: (c) => c.software_profiles },
+  { id: "device", Icon: Headphones },
+  { id: "settings", Icon: Settings2 },
 ];
 
 export function Sidebar({
@@ -77,13 +65,24 @@ export function Sidebar({
   onNavigate: (next: View) => void;
   snapshot: Snapshot | null;
 }) {
+  const t = useT();
   const connection = snapshot?.connection ?? "unknown";
   const caps = snapshot?.capabilities ?? null;
   const items = NAV.filter((item) => !caps || !item.supported || item.supported(caps));
 
+  const label: Record<View, string> = {
+    dashboard: t.nav.dashboard,
+    audio: t.nav.audio,
+    microphone: t.nav.microphone,
+    equalizer: t.nav.equaliser,
+    profiles: t.nav.profiles,
+    device: t.nav.device,
+    settings: t.nav.settings,
+  };
+
   return (
     <nav
-      aria-label="Sections"
+      aria-label={t.app.sections}
       className="flex w-[224px] shrink-0 flex-col border-r border-line bg-panel"
     >
       <div className="flex items-center gap-2.5 border-b border-line px-5 py-4">
@@ -93,14 +92,14 @@ export function Sidebar({
         />
         <div className="min-w-0">
           <p className="truncate text-[13px] font-semibold tracking-tight text-ink">
-            Headset Control Center
+            {t.app.name}
           </p>
-          <p className="legend mt-0.5">Local · Open hardware</p>
+          <p className="legend mt-0.5">{t.app.tagline}</p>
         </div>
       </div>
 
       <ul className="flex-1 space-y-0.5 p-3">
-        {items.map(({ id, label, Icon }) => (
+        {items.map(({ id, Icon }) => (
           <li key={id}>
             <button
               type="button"
@@ -123,20 +122,20 @@ export function Sidebar({
                 )}
               />
               <Icon size={16} className="shrink-0" />
-              {label}
+              {label[id]}
             </button>
           </li>
         ))}
       </ul>
 
       <div className="border-t border-line px-5 py-4">
-        <p className="legend mb-2">Connection</p>
+        <p className="legend mb-2">{t.app.connection}</p>
         <StatusLamp
           tone={connectionTone(connection)}
-          label={connectionLabel(connection)}
+          label={connectionLabel(connection, t)}
         />
         <p className="readout mt-1 truncate text-[12px] text-ink-faint">
-          {snapshot?.device?.name ?? "No device detected"}
+          {snapshot?.device?.name ?? t.app.noDeviceDetected}
         </p>
       </div>
     </nav>

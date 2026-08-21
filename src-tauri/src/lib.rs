@@ -86,6 +86,7 @@ pub fn run() {
             commands::set_settings,
             commands::export_diagnostics,
             commands::app_version,
+            commands::set_native_strings,
         ])
         .run(tauri::generate_context!())
         .expect("error while running the application");

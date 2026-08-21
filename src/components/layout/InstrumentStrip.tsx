@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { BalanceMeter } from "@/components/ui/BalanceMeter";
 import { SegmentedGauge } from "@/components/ui/SegmentedGauge";
 import { StatusLamp } from "@/components/ui/StatusLamp";
+import { useT } from "@/i18n";
 import { cn } from "@/lib/cn";
 import { connectionLabel, connectionTone } from "@/types/device";
 import type { Snapshot } from "@/types/device";
@@ -34,6 +35,7 @@ function Cell({
  * to remember.
  */
 export function InstrumentStrip({ snapshot }: { snapshot: Snapshot | null }) {
+  const t = useT();
   const device = snapshot?.device ?? null;
   const state = snapshot?.state ?? null;
   const caps = snapshot?.capabilities ?? null;
@@ -43,34 +45,38 @@ export function InstrumentStrip({ snapshot }: { snapshot: Snapshot | null }) {
 
   /** With no device attached there is nothing to call supported or not. */
   const absent = (supported: boolean) =>
-    !device ? "—" : supported ? "Not reported while off" : "Not supported";
+    !device
+      ? "—"
+      : supported
+        ? t.strip.notReportedWhileOff
+        : t.strip.notSupported;
 
   return (
     <div className="flex shrink-0 items-stretch divide-x divide-line overflow-hidden border-b border-line bg-panel">
-      <Cell legend="Device" className="flex-[1.3]">
+      <Cell legend={t.strip.device} className="flex-[1.3]">
         <p className="truncate text-[15px] font-semibold tracking-tight text-ink">
-          {device?.name ?? "No device"}
+          {device?.name ?? t.strip.noDevice}
         </p>
         <p className="readout mt-0.5 truncate text-[12px] text-ink-faint">
           {device?.connection ?? "—"}
         </p>
       </Cell>
 
-      <Cell legend="Link" className="flex-[0.9]">
+      <Cell legend={t.strip.link} className="flex-[0.9]">
         <StatusLamp
           tone={connectionTone(connection)}
-          label={connectionLabel(connection)}
+          label={connectionLabel(connection, t)}
         />
         <p className="readout mt-0.5 truncate text-[12px] text-ink-faint">
           {device
             ? state?.powered_on
-              ? "Headset powered on"
-              : "Headset powered off"
+              ? t.strip.poweredOn
+              : t.strip.poweredOff
             : "—"}
         </p>
       </Cell>
 
-      <Cell legend="Battery" className="flex-[1.1]">
+      <Cell legend={t.strip.battery} className="flex-[1.1]">
         {caps?.battery && battery ? (
           <>
             <div className="flex items-center gap-3">
@@ -85,8 +91,8 @@ export function InstrumentStrip({ snapshot }: { snapshot: Snapshot | null }) {
             </div>
             <p className="readout mt-0.5 truncate text-[12px] text-ink-faint">
               {battery.charging
-                ? "Charging"
-                : `${caps.battery.steps} reported levels`}
+                ? t.strip.charging
+                : t.strip.reportedLevels(caps.battery.steps)}
             </p>
           </>
         ) : (
@@ -96,7 +102,7 @@ export function InstrumentStrip({ snapshot }: { snapshot: Snapshot | null }) {
         )}
       </Cell>
 
-      <Cell legend="ChatMix" className="flex-[1.2]">
+      <Cell legend={t.strip.chatmix} className="flex-[1.2]">
         {caps?.chatmix && chatmix ? (
           <BalanceMeter game={chatmix.game} chat={chatmix.chat} />
         ) : (

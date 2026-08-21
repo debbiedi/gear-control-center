@@ -1,3 +1,4 @@
+import { useT } from "@/i18n";
 import { cn } from "@/lib/cn";
 
 /**
@@ -16,14 +17,15 @@ export function BalanceMeter({
   chat: number;
   className?: string;
 }) {
+  const t = useT();
   const total = game + chat;
   const gameShare = total === 0 ? 50 : (game / total) * 100;
 
   return (
     <div className={cn("w-full", className)}>
       <div className="mb-1.5 flex items-baseline justify-between">
-        <span className="legend">Game</span>
-        <span className="legend">Chat</span>
+        <span className="legend">{t.dashboard.game}</span>
+        <span className="legend">{t.dashboard.chat}</span>
       </div>
       <div
         className="relative h-1.5 w-full overflow-hidden rounded-full bg-panel-3"
@@ -31,7 +33,7 @@ export function BalanceMeter({
         aria-valuenow={Math.round(gameShare)}
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-label={`ChatMix dial, ${Math.round(gameShare)}% toward game audio`}
+        aria-label={t.dashboard.chatmixTitle}
       >
         <div
           className="absolute inset-y-0 left-0 bg-brass transition-[width] duration-300"

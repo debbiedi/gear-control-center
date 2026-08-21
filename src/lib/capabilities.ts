@@ -1,3 +1,5 @@
+import { term } from "@/i18n";
+import type { Catalog } from "@/i18n/en";
 import type { Capabilities } from "@/types/device";
 
 export interface CapabilityRow {
@@ -14,122 +16,113 @@ export interface CapabilityRow {
  * does not exist; "five discrete levels" tells the owner exactly what their
  * headset sends and why the gauge looks the way it does.
  */
-export function capabilityRows(caps: Capabilities): CapabilityRow[] {
+export function capabilityRows(
+  caps: Capabilities,
+  t: Catalog,
+): CapabilityRow[] {
+  const c = t.capabilities;
   const eq = caps.equalizer;
   return [
     {
-      label: "Battery level",
+      label: c.batteryLevel,
       supported: caps.battery !== null,
       detail: caps.battery
-        ? `${caps.battery.steps} discrete levels (0 / 25 / 50 / 75 / 100%)`
-        : "Not reported by this device",
+        ? c.batteryLevelDetail(caps.battery.steps)
+        : c.batteryLevelAbsent,
     },
     {
-      label: "Charging state",
+      label: c.chargingState,
       supported: caps.battery !== null,
-      detail: caps.battery
-        ? "Reported while the cable is attached"
-        : "Not reported by this device",
+      detail: caps.battery ? c.chargingStateDetail : c.batteryLevelAbsent,
     },
     {
-      label: "ChatMix dial",
+      label: c.chatmix,
       supported: caps.chatmix,
-      detail: caps.chatmix
-        ? "Read-only — the wheel is on the headset"
-        : "Not present on this device",
+      detail: caps.chatmix ? c.chatmixDetail : c.chatmixAbsent,
     },
     {
-      label: "Sidetone",
+      label: c.sidetone,
       supported: caps.sidetone !== null,
       detail: caps.sidetone
-        ? `${caps.sidetone.labels.length} hardware steps: ${caps.sidetone.labels.join(", ")}`
-        : "Not adjustable on this device",
+        ? c.sidetoneDetail(
+            caps.sidetone.labels.length,
+            caps.sidetone.labels.map((l) => term(l, t)).join(", "),
+          )
+        : c.sidetoneAbsent,
     },
     {
-      label: "Equaliser",
+      label: c.equaliser,
       supported: eq !== null,
       detail: eq
-        ? `${eq.bands} bands, ${eq.min_db} to +${eq.max_db} dB in ${eq.step_db} dB steps` +
-          (eq.hardware ? " — applied by the headset itself" : "")
-        : "Not available on this device",
+        ? c.equaliserDetail(eq.bands, eq.min_db, eq.max_db, eq.step_db) +
+          (eq.hardware ? c.equaliserHardware : "")
+        : c.equaliserAbsent,
     },
     {
-      label: "Equaliser presets",
+      label: c.presets,
       supported: (eq?.preset_names.length ?? 0) > 0,
       detail: eq?.preset_names.length
-        ? eq.preset_names.join(" · ")
-        : "No stored presets",
+        ? eq.preset_names.map((n) => term(n, t)).join(" · ")
+        : c.presetsAbsent,
     },
     {
-      label: "Auto shut-off timer",
+      label: c.inactiveTime,
       supported: caps.inactive_time !== null,
       detail: caps.inactive_time
-        ? `Up to ${caps.inactive_time.max_minutes} minutes`
-        : "Not adjustable on this device",
+        ? c.inactiveTimeDetail(caps.inactive_time.max_minutes)
+        : c.inactiveTimeAbsent,
     },
     {
-      label: "Output volume",
+      label: c.volume,
       supported: caps.volume,
-      detail: caps.volume
-        ? "USB audio hardware volume"
-        : "Not exposed by this device",
+      detail: caps.volume ? c.volumeDetail : c.notExposed,
     },
     {
-      label: "Output mute",
+      label: c.mute,
       supported: caps.mute,
-      detail: caps.mute ? "USB audio hardware mute" : "Not exposed by this device",
+      detail: caps.mute ? c.muteDetail : c.notExposed,
     },
     {
-      label: "Microphone volume",
+      label: c.micVolume,
       supported: caps.microphone_volume,
-      detail: caps.microphone_volume
-        ? "USB audio capture gain"
-        : "Not exposed by this device",
+      detail: caps.microphone_volume ? c.micVolumeDetail : c.notExposed,
     },
     {
-      label: "Microphone mute",
+      label: c.micMute,
       supported: caps.microphone_mute,
-      detail: caps.microphone_mute
-        ? "USB audio capture mute"
-        : "Not exposed by this device",
+      detail: caps.microphone_mute ? c.micMuteDetail : c.notExposed,
     },
     {
-      label: "Software profiles",
+      label: c.softwareProfiles,
       supported: caps.software_profiles,
-      detail: caps.software_profiles
-        ? "Stored by this application and sent to the headset on demand"
-        : "Not available",
+      detail: caps.software_profiles ? c.softwareProfilesDetail : c.notAvailable,
     },
     {
-      label: "Onboard profile memory",
+      label: c.onboardProfiles,
       supported: caps.onboard_profiles,
       detail: caps.onboard_profiles
-        ? "Settings persist on the headset"
-        : "The headset cannot store profiles, so there is nothing to save to it",
+        ? c.onboardProfilesDetail
+        : c.onboardProfilesAbsent,
     },
     {
-      label: "Firmware update",
+      label: c.firmware,
       supported: caps.firmware_update,
-      detail: caps.firmware_update
-        ? "Supported"
-        : "No documented update path for this device",
+      detail: caps.firmware_update ? c.supported : c.firmwareAbsent,
     },
     {
-      label: "RGB lighting",
+      label: c.rgb,
       supported: caps.rgb,
-      detail: caps.rgb ? "Supported" : "This headset has no addressable lighting",
+      detail: caps.rgb ? c.supported : c.rgbAbsent,
     },
     {
-      label: "Spatial audio",
+      label: c.spatial,
       supported: caps.spatial_audio,
-      detail: caps.spatial_audio ? "Supported" : "Not a hardware feature here",
+      detail: caps.spatial_audio ? c.supported : c.spatialAbsent,
     },
     {
-      label: "Hardware noise reduction",
+      label: c.noiseReduction,
       supported: caps.noise_reduction,
-      detail: caps.noise_reduction
-        ? "Supported"
-        : "No microphone gate, compressor or limiter on the device",
+      detail: caps.noise_reduction ? c.supported : c.noiseReductionAbsent,
     },
   ];
 }

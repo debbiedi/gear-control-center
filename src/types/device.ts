@@ -1,4 +1,5 @@
 /** Mirrors the serialised types in `src-tauri/src/device/types.rs`. */
+import type { Catalog } from "@/i18n/en";
 
 export type ConnectionState =
   | "connected"
@@ -152,15 +153,9 @@ export function formatDb(db: number | null): string {
   return `${value > 0 ? "+" : ""}${value.toFixed(1)} dB`;
 }
 
-export function connectionLabel(c: ConnectionState): string {
-  if (typeof c === "object") return "Error";
-  return { 
-    connected: "Connected",
-    disconnected: "Disconnected",
-    connecting: "Connecting",
-    reconnecting: "Reconnecting",
-    unknown: "Unknown",
-  }[c];
+export function connectionLabel(c: ConnectionState, t: Catalog): string {
+  if (typeof c === "object") return t.connection.error;
+  return t.connection[c];
 }
 
 export function connectionTone(
@@ -210,17 +205,18 @@ export interface ApplyReport {
 }
 
 /** Human-readable list of what a profile will change. */
-export function profileContents(s: ProfileSettings): string[] {
+export function profileContents(s: ProfileSettings, t: Catalog): string[] {
+  const c = t.profiles.contents;
   const parts: string[] = [];
-  if (s.volume != null) parts.push("Volume");
-  if (s.muted != null) parts.push(s.muted ? "Muted" : "Unmuted");
-  if (s.microphoneVolume != null) parts.push("Mic level");
+  if (s.volume != null) parts.push(c.volume);
+  if (s.muted != null) parts.push(s.muted ? c.muted : c.unmuted);
+  if (s.microphoneVolume != null) parts.push(c.micLevel);
   if (s.microphoneMuted != null)
-    parts.push(s.microphoneMuted ? "Mic muted" : "Mic live");
-  if (s.sidetone != null) parts.push("Sidetone");
-  if (s.inactiveMinutes != null) parts.push("Auto shut-off");
-  if (s.equalizer) parts.push("Equaliser curve");
-  else if (s.equalizerPreset != null) parts.push("Equaliser preset");
+    parts.push(s.microphoneMuted ? c.micMuted : c.micLive);
+  if (s.sidetone != null) parts.push(c.sidetone);
+  if (s.inactiveMinutes != null) parts.push(c.autoShutOff);
+  if (s.equalizer) parts.push(c.equaliserCurve);
+  else if (s.equalizerPreset != null) parts.push(c.equaliserPreset);
   return parts;
 }
 
@@ -232,4 +228,6 @@ export interface AppSettings {
   lowBatteryNotification: boolean;
   /** Only 25 or 50: the headset reports nothing in between. */
   lowBatteryPercent: number;
+  /** A language code, or "system" to follow the desktop. */
+  locale: string;
 }

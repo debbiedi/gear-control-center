@@ -53,8 +53,8 @@ Download it from [Releases](../../releases), make it executable, run it.
 Nothing is installed.
 
 ```bash
-chmod +x headset-control-center-0.1.1-x86_64.AppImage
-./headset-control-center-0.1.1-x86_64.AppImage
+chmod +x headset-control-center-0.2.0-x86_64.AppImage
+./headset-control-center-0.2.0-x86_64.AppImage
 ```
 
 **Read this before downloading.** The published AppImage was built on Arch
@@ -121,6 +121,8 @@ An AUR package will follow; the publishing steps are in
 * System tray with battery and both mutes, start with the system, low battery
   warning
 * A diagnostics report for bug reports
+* An interface in English, German, Spanish, French and Turkish, following the
+  desktop's language by default
 
 <p align="center">
   <img src="docs/screenshots/02-equaliser.png" width="49%" alt="Equaliser">
@@ -137,6 +139,21 @@ limiter.
 
 Each of these appears in the application marked as unsupported, rather than
 being quietly missing.
+
+## Languages
+
+The interface ships in English, Deutsch, Español, Français and Türkçe. It
+follows the desktop's language by default — `LANG=de_DE.UTF-8` gives a German
+window, tray menu and notifications — and **Settings → Interface language**
+overrides that.
+
+Readings from the device are never translated: a decibel is a decibel, and a
+model name is what the hardware calls itself.
+
+Adding a language is one file, and the type system refuses to build if any key
+is missing, so a half-finished translation cannot ship as English text in front
+of someone who does not read English. The procedure is in
+[docs/translating.md](docs/translating.md) — contributions welcome.
 
 ## Build from source
 
@@ -235,6 +252,7 @@ experiment. See [docs/protocol.md](docs/protocol.md).
   sources, and how to add a device
 * [Troubleshooting](docs/troubleshooting.md) — conflicts, permissions, bug
   reports
+* [Translating](docs/translating.md) — how to add a language
 
 ## Credits
 

@@ -11,15 +11,19 @@ use tauri::{
 };
 
 use crate::commands::{AppState, Snapshot};
+use crate::system::strings::fill;
 
 pub const TRAY_ID: &str = "main";
 
-/// Handles kept so the menu can be rewritten as the device changes.
+/// Handles kept so the menu can be rewritten as the device changes — and as
+/// the language changes, which is why even the fixed entries are held here.
 pub struct TrayItems {
     status: MenuItem<Wry>,
     battery: MenuItem<Wry>,
     mute: MenuItem<Wry>,
     microphone: MenuItem<Wry>,
+    show: MenuItem<Wry>,
+    quit: MenuItem<Wry>,
 }
 
 pub fn create(app: &AppHandle) -> tauri::Result<()> {
@@ -66,6 +70,8 @@ pub fn create(app: &AppHandle) -> tauri::Result<()> {
         battery,
         mute,
         microphone,
+        show,
+        quit,
     });
     Ok(())
 }
@@ -107,34 +113,37 @@ pub fn update(app: &AppHandle, snapshot: &Snapshot) {
     let Some(items) = app.try_state::<TrayItems>() else {
         return;
     };
+    let text = app.state::<AppState>().strings.lock().clone();
 
     let name = snapshot
         .device
         .as_ref()
         .map(|d| d.name.clone())
-        .unwrap_or_else(|| "No device detected".into());
+        .unwrap_or_else(|| text.no_device.clone());
     let _ = items.status.set_text(&name);
 
     let battery = match snapshot.state.as_ref().and_then(|s| s.battery.as_ref()) {
-        Some(b) if b.charging => format!("Battery: {}% · charging", b.percent),
-        Some(b) => format!("Battery: {}%", b.percent),
-        None if snapshot.device.is_some() => "Battery: not reported".into(),
-        None => "Battery: —".into(),
+        Some(b) if b.charging => fill(&text.battery_charging, "percent", &b.percent.to_string()),
+        Some(b) => fill(&text.battery, "percent", &b.percent.to_string()),
+        None if snapshot.device.is_some() => text.battery_not_reported.clone(),
+        None => text.battery_unknown.clone(),
     };
     let _ = items.battery.set_text(&battery);
 
     let playback = snapshot.audio.as_ref().and_then(|a| a.playback.as_ref());
     let capture = snapshot.audio.as_ref().and_then(|a| a.capture.as_ref());
     let _ = items.mute.set_text(match playback {
-        Some(c) if c.muted => "Unmute output",
-        _ => "Mute output",
+        Some(c) if c.muted => &text.unmute_output,
+        _ => &text.mute_output,
     });
     let _ = items.mute.set_enabled(playback.is_some());
     let _ = items.microphone.set_text(match capture {
-        Some(c) if c.muted => "Unmute microphone",
-        _ => "Mute microphone",
+        Some(c) if c.muted => &text.unmute_microphone,
+        _ => &text.mute_microphone,
     });
     let _ = items.microphone.set_enabled(capture.is_some());
+    let _ = items.show.set_text(&text.open);
+    let _ = items.quit.set_text(&text.quit);
 
     if let Some(tray) = app.tray_by_id(TRAY_ID) {
         let tooltip = match snapshot.state.as_ref().and_then(|s| s.battery.as_ref()) {

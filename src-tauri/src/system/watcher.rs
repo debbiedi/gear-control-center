@@ -115,16 +115,25 @@ fn notify_on_low_battery(
     if !crossed {
         return;
     }
+    let text = state.strings.lock().clone();
     let name = snapshot
         .device
         .as_ref()
         .map(|d| d.name.as_str())
-        .unwrap_or("Your headset");
+        .unwrap_or("Headset");
     if let Err(e) = app
         .notification()
         .builder()
-        .title(format!("{name} battery is low"))
-        .body(format!("{}% remaining.", battery.percent))
+        .title(crate::system::strings::fill(
+            &text.low_battery_title,
+            "device",
+            name,
+        ))
+        .body(crate::system::strings::fill(
+            &text.low_battery_body,
+            "percent",
+            &battery.percent.to_string(),
+        ))
         .show()
     {
         log::warn!("could not show the low battery notification: {e}");

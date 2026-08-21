@@ -1,6 +1,6 @@
 # Maintainer: Kadir Nergiz <lahgamingtr@gmail.com>
 pkgname=headset-control-center
-pkgver=0.1.1
+pkgver=0.2.0
 pkgrel=1
 pkgdesc="Desktop control panel for USB gaming headsets — shows only what the hardware actually reports"
 arch=('x86_64')

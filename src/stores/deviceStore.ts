@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { useI18n } from "@/i18n";
 import { deviceService } from "@/services/device";
 import type { DiscoveredDevice, Snapshot } from "@/types/device";
 
@@ -30,18 +31,23 @@ function describe(error: unknown, label: string): string {
         : detail && typeof detail === "object"
           ? Object.values(detail).filter(Boolean).join(" ")
           : "";
+    const t = useI18n.getState().t;
     const base: Record<string, string> = {
-      unsupported: "This feature is not supported by your device.",
-      busy: "Another application is currently controlling the device.",
-      offline: "The headset is turned off.",
-      not_connected: "No device is connected.",
-      transport: "Unable to communicate with the device.",
-      protocol: "The device sent an unexpected response.",
-      invalid_parameter: "That value is outside what the device accepts.",
+      unsupported: t.errors.unsupported,
+      busy: t.errors.busy,
+      offline: t.errors.offline,
+      not_connected: t.errors.notConnected,
+      transport: t.errors.transport,
+      protocol: t.errors.protocol,
+      invalid_parameter: t.errors.invalidParameter,
     };
-    return [base[kind] ?? `${label} failed.`, message].filter(Boolean).join(" ");
+    return [base[kind] ?? t.errors.failed(label), message]
+      .filter(Boolean)
+      .join(" ");
   }
-  return `${label} failed. ${String(error)}`;
+  // The technical detail from the native layer stays as it came: it is a
+  // diagnostic, and translating a message we did not write would be a guess.
+  return `${useI18n.getState().t.errors.failed(label)} ${String(error)}`;
 }
 
 export const useDeviceStore = create<DeviceStore>((set, get) => ({
@@ -86,7 +92,12 @@ export const useDeviceStore = create<DeviceStore>((set, get) => ({
     try {
       set({ snapshot: await deviceService.snapshot() });
     } catch (error) {
-      set({ lastActionError: describe(error, "Reading device state") });
+      set({
+        lastActionError: describe(
+          error,
+          useI18n.getState().t.actions.readingState,
+        ),
+      });
     }
   },
 
@@ -95,7 +106,12 @@ export const useDeviceStore = create<DeviceStore>((set, get) => ({
     try {
       set({ discovered: await deviceService.discover() });
     } catch (error) {
-      set({ lastActionError: describe(error, "Scanning for devices") });
+      set({
+        lastActionError: describe(
+          error,
+          useI18n.getState().t.actions.scanning,
+        ),
+      });
     } finally {
       set({ scanning: false });
     }
@@ -106,7 +122,12 @@ export const useDeviceStore = create<DeviceStore>((set, get) => ({
       await deviceService.connect(deviceId);
       set({ lastActionError: null });
     } catch (error) {
-      set({ lastActionError: describe(error, "Connecting") });
+      set({
+        lastActionError: describe(
+          error,
+          useI18n.getState().t.actions.connecting,
+        ),
+      });
     }
     await get().refresh();
   },

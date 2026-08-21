@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { en } from "@/i18n/en";
 import {
   connectionLabel,
   connectionTone,
@@ -37,9 +38,9 @@ describe("formatDb", () => {
 
 describe("connection state", () => {
   it("always has a text label, never colour alone", () => {
-    expect(connectionLabel("connected")).toBe("Connected");
-    expect(connectionLabel("reconnecting")).toBe("Reconnecting");
-    expect(connectionLabel({ error: { message: "boom" } })).toBe("Error");
+    expect(connectionLabel("connected", en)).toBe("Connected");
+    expect(connectionLabel("reconnecting", en)).toBe("Reconnecting");
+    expect(connectionLabel({ error: { message: "boom" } }, en)).toBe("Error");
   });
 
   it("maps transitional states to a warning tone, not a fault", () => {
@@ -52,25 +53,25 @@ describe("connection state", () => {
 
 describe("profileContents", () => {
   it("lists only what the profile actually holds", () => {
-    expect(profileContents({ volume: 40 })).toEqual(["Volume"]);
-    expect(profileContents({})).toEqual([]);
+    expect(profileContents({ volume: 40 }, en)).toEqual(["Volume"]);
+    expect(profileContents({}, en)).toEqual([]);
   });
 
   it("distinguishes a stored curve from a stored preset", () => {
-    expect(profileContents({ equalizer: [0, 0, 0] })).toEqual([
+    expect(profileContents({ equalizer: [0, 0, 0] }, en)).toEqual([
       "Equaliser curve",
     ]);
-    expect(profileContents({ equalizerPreset: 2 })).toEqual([
+    expect(profileContents({ equalizerPreset: 2 }, en)).toEqual([
       "Equaliser preset",
     ]);
     // A curve is the more specific of the two and wins.
     expect(
-      profileContents({ equalizer: [0], equalizerPreset: 2 }),
+      profileContents({ equalizer: [0], equalizerPreset: 2 }, en),
     ).toEqual(["Equaliser curve"]);
   });
 
   it("reports a stored mute as the state it will set", () => {
-    expect(profileContents({ muted: true })).toEqual(["Muted"]);
-    expect(profileContents({ muted: false })).toEqual(["Unmuted"]);
+    expect(profileContents({ muted: true }, en)).toEqual(["Muted"]);
+    expect(profileContents({ muted: false }, en)).toEqual(["Unmuted"]);
   });
 });

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Info, TriangleAlert, X } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { useT } from "@/i18n";
 
 interface NoticeProps {
   tone?: "info" | "warn" | "fault";
@@ -23,6 +24,7 @@ export function Notice({
   actions,
   onDismiss,
 }: NoticeProps) {
+  const t = useT();
   const { border, text, Icon } = TONE[tone];
 
   return (
@@ -45,7 +47,7 @@ export function Notice({
           <button
             type="button"
             onClick={onDismiss}
-            aria-label="Dismiss"
+            aria-label={t.app.dismiss}
             className="-mr-1 -mt-1 rounded p-1 text-ink-faint hover:text-ink"
           >
             <X size={14} />

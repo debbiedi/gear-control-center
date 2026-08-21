@@ -5,6 +5,13 @@ import { Notice } from "@/components/ui/Notice";
 import { Panel } from "@/components/ui/Panel";
 import { StepSelector } from "@/components/ui/StepSelector";
 import { Toggle } from "@/components/ui/Toggle";
+import {
+  LOCALE_NAMES,
+  useI18n,
+  useT,
+  type LocalePreference,
+} from "@/i18n";
+import { cn } from "@/lib/cn";
 import { deviceService } from "@/services/device";
 import { useDeviceStore } from "@/stores/deviceStore";
 import type { AppSettings, Snapshot } from "@/types/device";
@@ -12,6 +19,9 @@ import type { AppSettings, Snapshot } from "@/types/device";
 const THRESHOLDS = [25, 50];
 
 export function SettingsPage({ snapshot }: { snapshot: Snapshot | null }) {
+  const t = useT();
+  const preference = useI18n((s) => s.preference);
+  const setPreference = useI18n((s) => s.setPreference);
   const setMockMode = useDeviceStore((s) => s.setMockMode);
   const mockMode = snapshot?.mockMode ?? false;
 
@@ -47,92 +57,127 @@ export function SettingsPage({ snapshot }: { snapshot: Snapshot | null }) {
   return (
     <div className="space-y-4 p-6">
       {error && (
-        <Notice tone="fault" title="That setting was not applied" onDismiss={() => setError(null)}>
+        <Notice
+          tone="fault"
+          title={t.settings.settingFailed}
+          onDismiss={() => setError(null)}
+        >
           {error}
         </Notice>
       )}
 
-      <Panel legend="Startup" title="Launching">
+      <Panel
+        legend={t.settings.languageLegend}
+        title={t.settings.languageTitle}
+        description={t.settings.languageDescription}
+      >
+        <div className="max-w-[360px] space-y-4">
+          <select
+            aria-label={t.settings.languageTitle}
+            value={preference}
+            onChange={(e) =>
+              void setPreference(e.target.value as LocalePreference).then(() =>
+                setSettings((s) =>
+                  s ? { ...s, locale: e.target.value } : s,
+                ),
+              )
+            }
+            className={cn(
+              "h-9 w-full rounded-md border border-line bg-panel-2 px-3",
+              "text-[13.5px] text-ink focus:border-brass focus:outline-none",
+            )}
+          >
+            <option value="system">{t.settings.systemLanguage}</option>
+            {Object.entries(LOCALE_NAMES).map(([code, name]) => (
+              <option key={code} value={code}>
+                {name}
+              </option>
+            ))}
+          </select>
+          <p className="text-[12.5px] leading-snug text-ink-dim">
+            {t.settings.languageNote}
+          </p>
+        </div>
+      </Panel>
+
+      <Panel legend={t.settings.startupLegend} title={t.settings.startupTitle}>
         {settings ? (
           <div className="space-y-5">
             <Toggle
               checked={settings.startWithSystem}
               onChange={(v) => void update({ startWithSystem: v })}
-              label="Start with the system"
-              description="Adds a desktop entry to your autostart directory. Nothing is installed system-wide."
+              label={t.settings.startWithSystem}
+              description={t.settings.startWithSystemDetail}
             />
             <Toggle
               checked={settings.startMinimised}
               onChange={(v) => void update({ startMinimised: v })}
-              label="Start in the tray"
-              description="Launch without opening the window."
+              label={t.settings.startMinimised}
+              description={t.settings.startMinimisedDetail}
               disabled={!settings.startWithSystem}
-              disabledReason="Available once the application starts with the system."
+              disabledReason={t.settings.startMinimisedDisabled}
             />
             <Toggle
               checked={settings.closeToTray}
               onChange={(v) => void update({ closeToTray: v })}
-              label="Closing the window keeps it running"
-              description="The headset keeps being read, and the tray entry stays available. Quit from the tray menu to stop it completely."
+              label={t.settings.closeToTray}
+              description={t.settings.closeToTrayDetail}
             />
           </div>
         ) : (
-          <p className="text-[13px] text-ink-dim">Loading…</p>
+          <p className="text-[13px] text-ink-dim">{t.settings.loading}</p>
         )}
       </Panel>
 
-      <Panel legend="Alerts" title="Notifications">
+      <Panel legend={t.settings.alertsLegend} title={t.settings.alertsTitle}>
         {settings ? (
           <div className="space-y-5">
             <Toggle
               checked={settings.lowBatteryNotification}
               onChange={(v) => void update({ lowBatteryNotification: v })}
-              label="Warn when the battery gets low"
-              description="Shown once as the level drops past the threshold, not repeatedly."
+              label={t.settings.lowBattery}
+              description={t.settings.lowBatteryDetail}
             />
             <StepSelector
-              label="Threshold"
-              options={THRESHOLDS.map((t) => `${t}%`)}
+              label={t.settings.threshold}
+              options={THRESHOLDS.map((threshold) => `${threshold}%`)}
               value={THRESHOLDS.indexOf(settings.lowBatteryPercent)}
               onChange={(i) => void update({ lowBatteryPercent: THRESHOLDS[i] })}
               disabled={!settings.lowBatteryNotification}
             />
             <p className="text-[12.5px] leading-snug text-ink-dim">
-              Only these two are offered because the headset reports five
-              levels — 0, 25, 50, 75 and 100 per cent. A threshold of 30% would
-              be waiting for a number the device never sends.
+              {t.settings.thresholdNote}
             </p>
           </div>
         ) : (
-          <p className="text-[13px] text-ink-dim">Loading…</p>
+          <p className="text-[13px] text-ink-dim">{t.settings.loading}</p>
         )}
       </Panel>
 
       <Panel
-        legend="Development"
-        title="Simulated device"
-        description="For working on the interface without hardware attached."
+        legend={t.settings.developmentLegend}
+        title={t.settings.simulatedTitle}
+        description={t.settings.simulatedDescription}
       >
         <Toggle
           checked={mockMode}
           onChange={(next) => void setMockMode(next)}
-          label="Use a simulated device"
-          description="Replaces the headset with a stand-in that reports the same capabilities and the same resolution. Every reading is clearly marked as simulated."
+          label={t.settings.useSimulated}
+          description={t.settings.useSimulatedDetail}
         />
         {mockMode && (
           <div className="mt-4">
-            <Notice tone="warn" title="Simulation is on">
-              No physical headset is being read or written while this is
-              enabled.
+            <Notice tone="warn" title={t.settings.simulationOnTitle}>
+              {t.settings.simulationOnBody}
             </Notice>
           </div>
         )}
       </Panel>
 
       <Panel
-        legend="Support"
-        title="Diagnostics"
-        description="A plain-text report of what this application can see, for attaching to a bug report."
+        legend={t.settings.supportLegend}
+        title={t.settings.diagnosticsTitle}
+        description={t.settings.diagnosticsDescription}
         actions={
           <Button
             icon={<FileText size={14} />}
@@ -143,38 +188,32 @@ export function SettingsPage({ snapshot }: { snapshot: Snapshot | null }) {
                 .catch((e) => setError(String(e)))
             }
           >
-            Write report
+            {t.settings.writeReport}
           </Button>
         }
       >
         {diagnostics ? (
           <p className="text-[13px] text-ink-dim">
-            Written to{" "}
+            {t.settings.writtenTo}{" "}
             <span className="readout selectable text-ink">{diagnostics}</span>
           </p>
         ) : (
-          <p className="text-[13px] text-ink-dim">
-            Contains device identifiers, capabilities, the last readings and
-            your settings. It contains nothing about you, and it is not sent
-            anywhere — the file stays on this machine.
-          </p>
+          <p className="text-[13px] text-ink-dim">{t.settings.diagnosticsBody}</p>
         )}
       </Panel>
 
-      <Panel legend="Application" title="About" description="Headset Control Center">
+      <Panel
+        legend={t.settings.aboutLegend}
+        title={t.settings.aboutTitle}
+        description={t.app.name}
+      >
         <div className="space-y-3 text-[13px] leading-relaxed text-ink-dim">
-          <p>
-            A local application for controlling supported headsets directly over
-            USB. Nothing is sent anywhere: there is no account, no telemetry and
-            no network connection.
-          </p>
-          <p>
-            Device support is built on publicly documented protocols. Where a
-            command has not been verified against hardware, the feature is
-            marked unsupported rather than shipped on a guess.
-          </p>
+          <p>{t.settings.aboutBody1}</p>
+          <p>{t.settings.aboutBody2}</p>
           <p className="readout text-[12px] text-ink-faint">
-            {version ? `Version ${version}` : "Version unavailable"} · Linux
+            {version
+              ? t.settings.version(version)
+              : t.settings.versionUnavailable}
           </p>
         </div>
       </Panel>

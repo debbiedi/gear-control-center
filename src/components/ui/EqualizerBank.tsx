@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { useT } from "@/i18n";
 import { cn } from "@/lib/cn";
 
 interface BankProps {
@@ -61,6 +62,7 @@ function Fader({
   onChange: (db: number) => void;
   disabled?: boolean;
 }) {
+  const t = useT();
   const track = useRef<HTMLDivElement>(null);
   const fraction = (value - min) / (max - min);
 
@@ -101,11 +103,14 @@ function Fader({
         role="slider"
         tabIndex={disabled ? -1 : 0}
         aria-orientation="vertical"
-        aria-label={`${label} band`}
+        aria-label={t.equaliser.bandLabel(label)}
         aria-valuemin={min}
         aria-valuemax={max}
         aria-valuenow={value}
-        aria-valuetext={`${value > 0 ? "+" : ""}${value} decibels at ${label}`}
+        aria-valuetext={t.equaliser.bandValue(
+          `${value > 0 ? "+" : ""}${value}`,
+          label,
+        )}
         aria-disabled={disabled}
         onKeyDown={onKeyDown}
         onPointerDown={(e) => {

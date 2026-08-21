@@ -3,6 +3,7 @@ import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Notice } from "@/components/ui/Notice";
 import { Panel } from "@/components/ui/Panel";
+import { useT } from "@/i18n";
 import { deviceService } from "@/services/device";
 import { cn } from "@/lib/cn";
 import {
@@ -13,6 +14,7 @@ import {
 } from "@/types/device";
 
 export function ProfilesPage({ snapshot }: { snapshot: Snapshot | null }) {
+  const t = useT();
   const [store, setStore] = useState<ProfileStore | null>(null);
   const [newName, setNewName] = useState("");
   const [editing, setEditing] = useState<string | null>(null);
@@ -58,21 +60,21 @@ export function ProfilesPage({ snapshot }: { snapshot: Snapshot | null }) {
   return (
     <div className="space-y-4 p-6">
       <Panel
-        legend="Saved"
-        title="Profiles"
-        description="Settings kept by this application and sent to the headset on request."
+        legend={t.profiles.savedLegend}
+        title={t.profiles.title}
+        description={t.profiles.description}
       >
         <div className="mb-5 flex flex-wrap items-end gap-3">
           <div className="min-w-[220px] flex-1">
             <label className="legend mb-2 block" htmlFor="profile-name">
-              Save the current settings as
+              {t.profiles.saveAs}
             </label>
             <input
               id="profile-name"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && void capture()}
-              placeholder="Late night, Voice call, Games…"
+              placeholder={t.profiles.placeholder}
               disabled={!connected}
               className={cn(
                 "h-9 w-full rounded-md border border-line bg-panel-2 px-3",
@@ -87,20 +89,23 @@ export function ProfilesPage({ snapshot }: { snapshot: Snapshot | null }) {
             onClick={() => void capture()}
             disabled={!connected || !newName.trim()}
           >
-            Save
+            {t.profiles.save}
           </Button>
         </div>
 
         {!connected && (
-          <Notice tone="info" title="No device connected">
-            Profiles can be applied and edited only while a headset is
-            connected — there is nothing to read the current settings from.
+          <Notice tone="info" title={t.profiles.noDeviceTitle}>
+            {t.profiles.noDeviceBody}
           </Notice>
         )}
 
         {error && (
           <div className="mb-4">
-            <Notice tone="fault" title="That did not work" onDismiss={() => setError(null)}>
+            <Notice
+              tone="fault"
+              title={t.profiles.failedTitle}
+              onDismiss={() => setError(null)}
+            >
               {error}
             </Notice>
           </div>
@@ -109,7 +114,7 @@ export function ProfilesPage({ snapshot }: { snapshot: Snapshot | null }) {
         {store && store.profiles.length > 0 ? (
           <ul className="divide-y divide-line">
             {store.profiles.map((profile) => {
-              const contents = profileContents(profile.settings);
+              const contents = profileContents(profile.settings, t);
               return (
                 <li
                   key={profile.id}
@@ -134,7 +139,7 @@ export function ProfilesPage({ snapshot }: { snapshot: Snapshot | null }) {
                         />
                         <button
                           type="button"
-                          aria-label="Confirm rename"
+                          aria-label={t.profiles.confirmRename}
                           onClick={() =>
                             void guard(() =>
                               deviceService.renameProfile(profile.id, editName),
@@ -146,7 +151,7 @@ export function ProfilesPage({ snapshot }: { snapshot: Snapshot | null }) {
                         </button>
                         <button
                           type="button"
-                          aria-label="Cancel rename"
+                          aria-label={t.profiles.cancelRename}
                           onClick={() => setEditing(null)}
                           className="rounded p-1.5 text-ink-faint hover:bg-panel-3"
                         >
@@ -159,14 +164,14 @@ export function ProfilesPage({ snapshot }: { snapshot: Snapshot | null }) {
                           {profile.name}
                           {store.lastApplied === profile.id && (
                             <span className="readout ml-2 text-[11px] text-ink-faint">
-                              last applied
+                              {t.profiles.lastApplied}
                             </span>
                           )}
                         </p>
                         <p className="mt-0.5 text-[12.5px] text-ink-dim">
                           {contents.length
                             ? contents.join(" · ")
-                            : "Nothing stored"}
+                            : t.profiles.nothingStored}
                         </p>
                       </>
                     )}
@@ -177,11 +182,11 @@ export function ProfilesPage({ snapshot }: { snapshot: Snapshot | null }) {
                       onClick={() => void apply(profile.id, profile.name)}
                       disabled={!connected || !contents.length}
                     >
-                      Apply
+                      {t.profiles.apply}
                     </Button>
                     <button
                       type="button"
-                      aria-label={`Rename ${profile.name}`}
+                      aria-label={t.profiles.rename(profile.name)}
                       onClick={() => {
                         setEditing(profile.id);
                         setEditName(profile.name);
@@ -192,7 +197,7 @@ export function ProfilesPage({ snapshot }: { snapshot: Snapshot | null }) {
                     </button>
                     <button
                       type="button"
-                      aria-label={`Delete ${profile.name}`}
+                      aria-label={t.profiles.remove(profile.name)}
                       onClick={() =>
                         void guard(() => deviceService.deleteProfile(profile.id))
                       }
@@ -207,17 +212,19 @@ export function ProfilesPage({ snapshot }: { snapshot: Snapshot | null }) {
           </ul>
         ) : (
           <p className="text-[13px] text-ink-dim">
-            No profiles yet. Set the headset up the way you want it, then save
-            it here.
+            {t.profiles.empty}
           </p>
         )}
       </Panel>
 
       {report && (
-        <Panel legend="Result" title={`Applied "${report.name}"`}>
+        <Panel
+          legend={t.profiles.resultLegend}
+          title={t.profiles.resultTitle(report.name)}
+        >
           {report.report.applied.length > 0 && (
             <p className="text-[13px] text-ink-dim">
-              Sent to the headset: {report.report.applied.join(", ")}.
+              {t.profiles.sent(report.report.applied.join(", "))}
             </p>
           )}
           {report.report.failed.length > 0 && (
@@ -232,26 +239,16 @@ export function ProfilesPage({ snapshot }: { snapshot: Snapshot | null }) {
           {report.report.applied.length === 0 &&
             report.report.failed.length === 0 && (
               <p className="text-[13px] text-ink-dim">
-                This profile holds no settings, so nothing was sent.
+                {t.profiles.nothingSent}
               </p>
             )}
         </Panel>
       )}
 
-      <Panel legend="How this works" title="Profiles live here, not on the headset">
+      <Panel legend={t.profiles.howLegend} title={t.profiles.howTitle}>
         <div className="space-y-3 text-[13px] leading-relaxed text-ink-dim">
-          <p>
-            This headset has no onboard memory for settings, so there is no
-            "save to device" button here — there is no such command in its
-            protocol. Applying a profile sends each setting to the device one at
-            a time, exactly as if you had set them by hand.
-          </p>
-          <p>
-            That also means the headset can be changed from its own controls
-            without this application knowing. A profile marked as last applied
-            is a record of what was sent, not a claim about what the hardware is
-            currently doing.
-          </p>
+          <p>{t.profiles.howBody1}</p>
+          <p>{t.profiles.howBody2}</p>
           <p className="readout text-[12px] text-ink-faint">
             ~/.config/headset-control-center/profiles.json
           </p>

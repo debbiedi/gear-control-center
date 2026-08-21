@@ -56,4 +56,7 @@ export const deviceService = {
     invoke<AppSettings>("set_settings", { settings }),
   exportDiagnostics: () => invoke<string>("export_diagnostics"),
   appVersion: () => invoke<string>("app_version"),
+  /** Hand the tray and notification text to the native layer. */
+  setNativeStrings: (strings: Record<string, string>) =>
+    invoke<void>("set_native_strings", { strings }),
 };

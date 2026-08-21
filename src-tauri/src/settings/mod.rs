@@ -26,6 +26,8 @@ pub struct AppSettings {
     /// The headset reports five levels, so anything other than 25 or 50 here
     /// would be a threshold it can never cross.
     pub low_battery_percent: u8,
+    /// Interface language: a language code, or "system" to follow the desktop.
+    pub locale: String,
 }
 
 impl Default for AppSettings {
@@ -37,6 +39,7 @@ impl Default for AppSettings {
             close_to_tray: true,
             low_battery_notification: true,
             low_battery_percent: 25,
+            locale: "system".into(),
         }
     }
 }

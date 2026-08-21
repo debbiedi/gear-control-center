@@ -1,6 +1,6 @@
 [package]
 name = "headset-control-center"
-version = "0.1.1"
+version = "0.2.0"
 description = "Control and configure supported USB gaming headsets"
 authors = ["Kadir Nergiz"]
 license = "MIT"

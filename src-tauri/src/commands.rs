@@ -13,6 +13,8 @@ use crate::device::DeviceManager;
 pub struct AppState {
     pub devices: Mutex<DeviceManager>,
     pub settings: Mutex<crate::settings::AppSettings>,
+    /// Tray and notification text, handed over by the interface.
+    pub strings: Mutex<crate::system::strings::NativeStrings>,
 }
 
 impl AppState {
@@ -33,6 +35,7 @@ impl AppState {
         Self {
             devices: Mutex::new(manager),
             settings: Mutex::new(crate::settings::load()),
+            strings: Mutex::new(Default::default()),
         }
     }
 }
@@ -487,4 +490,19 @@ pub fn export_diagnostics(app: State<'_, AppState>) -> DeviceResult<String> {
 #[tauri::command]
 pub fn app_version() -> &'static str {
     env!("CARGO_PKG_VERSION")
+}
+
+/// Take the tray and notification text from the interface.
+///
+/// Called once the language is known and again whenever it changes, so there
+/// is only ever one set of translations in the project.
+#[tauri::command]
+pub fn set_native_strings(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+    strings: crate::system::strings::NativeStrings,
+) {
+    *state.strings.lock() = strings;
+    let snapshot = build_snapshot(&state);
+    crate::system::tray::update(&app, &snapshot);
 }

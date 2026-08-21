@@ -1,5 +1,6 @@
 import { Headphones, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { useT } from "@/i18n";
 import { useDeviceStore } from "@/stores/deviceStore";
 
 /**
@@ -10,6 +11,7 @@ import { useDeviceStore } from "@/stores/deviceStore";
  * simulated device is offered last so it never looks like the normal path.
  */
 export function EmptyState() {
+  const t = useT();
   const scanning = useDeviceStore((s) => s.scanning);
   const scan = useDeviceStore((s) => s.scan);
   const setMockMode = useDeviceStore((s) => s.setMockMode);
@@ -22,18 +24,14 @@ export function EmptyState() {
         </div>
 
         <h1 className="text-[17px] font-semibold tracking-tight text-ink">
-          No compatible device detected
+          {t.empty.title}
         </h1>
         <p className="mx-auto mt-2 max-w-[380px] text-[13.5px] leading-relaxed text-ink-dim">
-          Nothing this application knows how to talk to is connected right now.
+          {t.empty.lede}
         </p>
 
         <ul className="mx-auto mt-5 space-y-2 text-left text-[13px] text-ink-dim">
-          {[
-            "Check that the wireless dongle is plugged in.",
-            "Switch the headset on and wait a few seconds for it to pair.",
-            "Close any other software that controls the headset — only one application can hold the device at a time.",
-          ].map((hint) => (
+          {t.empty.hints.map((hint) => (
             <li key={hint} className="flex gap-2.5">
               <span aria-hidden className="mt-[7px] size-1 shrink-0 rounded-full bg-ink-faint" />
               <span>{hint}</span>
@@ -48,10 +46,10 @@ export function EmptyState() {
             disabled={scanning}
             icon={<RefreshCw size={14} className={scanning ? "animate-spin" : ""} />}
           >
-            {scanning ? "Scanning" : "Scan again"}
+            {scanning ? t.empty.scanning : t.empty.scanAgain}
           </Button>
           <Button variant="ghost" onClick={() => void setMockMode(true)}>
-            Use a simulated device
+            {t.empty.useSimulated}
           </Button>
         </div>
       </div>
