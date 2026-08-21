@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Graphite plate with a brass mark: the same two materials the interface
+       is built from, so the launcher entry and the window agree. -->
+  <rect width="512" height="512" rx="114" fill="#171b1e"/>
+  <rect x="6" y="6" width="500" height="500" rx="108" fill="none" stroke="#2a3238" stroke-width="12"/>
+
+  <!-- Headband -->
+  <path d="M136 300 A120 120 0 0 1 376 300"
+        fill="none" stroke="#d9a441" stroke-width="36" stroke-linecap="round"/>
+
+  <!-- Ear cups -->
+  <rect x="104" y="284" width="72" height="124" rx="32" fill="#d9a441"/>
+  <rect x="336" y="284" width="72" height="124" rx="32" fill="#d9a441"/>
+
+  <!-- Four segments in the left cup: the battery gauge reads in steps, and so
+       does this. -->
+  <g fill="#171b1e">
+    <rect x="122" y="300" width="36" height="18" rx="6"/>
+    <rect x="122" y="326" width="36" height="18" rx="6"/>
+    <rect x="122" y="352" width="36" height="18" rx="6" opacity="0.45"/>
+    <rect x="122" y="378" width="36" height="14" rx="6" opacity="0.2"/>
+  </g>
+</svg>

@@ -1,0 +1,37 @@
+[package]
+name = "headset-control-center"
+version = "0.1.0"
+description = "Control and configure supported USB gaming headsets"
+authors = ["Kadir Nergiz"]
+license = "MIT"
+edition = "2021"
+rust-version = "1.77.2"
+
+[lib]
+name = "headset_cc_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.6.3", features = [] }
+
+[dependencies]
+tauri = { version = "2.11.3", features = ["tray-icon"] }
+tauri-plugin-log = "2"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "2"
+log = "0.4"
+parking_lot = "0.12"
+hidapi = "2.6"
+alsa = "0.12"
+tauri-plugin-autostart = "2.5.1"
+tauri-plugin-single-instance = "2.4.3"
+tauri-plugin-notification = "2.3.3"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+udev = "0.9"
+
+[profile.release]
+codegen-units = 1
+lto = true
+strip = true

@@ -1,0 +1,262 @@
+import { useEffect, useState } from "react";
+import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { Notice } from "@/components/ui/Notice";
+import { Panel } from "@/components/ui/Panel";
+import { deviceService } from "@/services/device";
+import { cn } from "@/lib/cn";
+import {
+  profileContents,
+  type ApplyReport,
+  type ProfileStore,
+  type Snapshot,
+} from "@/types/device";
+
+export function ProfilesPage({ snapshot }: { snapshot: Snapshot | null }) {
+  const [store, setStore] = useState<ProfileStore | null>(null);
+  const [newName, setNewName] = useState("");
+  const [editing, setEditing] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [report, setReport] = useState<{ name: string; report: ApplyReport } | null>(
+    null,
+  );
+  const [error, setError] = useState<string | null>(null);
+  const connected = !!snapshot?.device;
+
+  useEffect(() => {
+    void deviceService.listProfiles().then(setStore).catch(() => setStore(null));
+  }, []);
+
+  const guard = async (action: () => Promise<ProfileStore>) => {
+    setError(null);
+    try {
+      setStore(await action());
+    } catch (e) {
+      const detail = (e as { detail?: unknown })?.detail;
+      setError(typeof detail === "string" ? detail : String(e));
+    }
+  };
+
+  const capture = async () => {
+    const name = newName.trim();
+    if (!name) return;
+    await guard(() => deviceService.captureProfile(name));
+    setNewName("");
+  };
+
+  const apply = async (id: string, name: string) => {
+    setError(null);
+    try {
+      setReport({ name, report: await deviceService.applyProfile(id) });
+      setStore(await deviceService.listProfiles());
+    } catch (e) {
+      const detail = (e as { detail?: unknown })?.detail;
+      setError(typeof detail === "string" ? detail : String(e));
+    }
+  };
+
+  return (
+    <div className="space-y-4 p-6">
+      <Panel
+        legend="Saved"
+        title="Profiles"
+        description="Settings kept by this application and sent to the headset on request."
+      >
+        <div className="mb-5 flex flex-wrap items-end gap-3">
+          <div className="min-w-[220px] flex-1">
+            <label className="legend mb-2 block" htmlFor="profile-name">
+              Save the current settings as
+            </label>
+            <input
+              id="profile-name"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && void capture()}
+              placeholder="Late night, Voice call, Games…"
+              disabled={!connected}
+              className={cn(
+                "h-9 w-full rounded-md border border-line bg-panel-2 px-3",
+                "text-[13.5px] text-ink placeholder:text-ink-faint",
+                "focus:border-brass focus:outline-none disabled:opacity-50",
+              )}
+            />
+          </div>
+          <Button
+            variant="primary"
+            icon={<Plus size={14} />}
+            onClick={() => void capture()}
+            disabled={!connected || !newName.trim()}
+          >
+            Save
+          </Button>
+        </div>
+
+        {!connected && (
+          <Notice tone="info" title="No device connected">
+            Profiles can be applied and edited only while a headset is
+            connected — there is nothing to read the current settings from.
+          </Notice>
+        )}
+
+        {error && (
+          <div className="mb-4">
+            <Notice tone="fault" title="That did not work" onDismiss={() => setError(null)}>
+              {error}
+            </Notice>
+          </div>
+        )}
+
+        {store && store.profiles.length > 0 ? (
+          <ul className="divide-y divide-line">
+            {store.profiles.map((profile) => {
+              const contents = profileContents(profile.settings);
+              return (
+                <li
+                  key={profile.id}
+                  className="flex flex-wrap items-center gap-4 py-3 first:pt-0"
+                >
+                  <div className="min-w-[200px] flex-1">
+                    {editing === profile.id ? (
+                      <div className="flex items-center gap-2">
+                        <input
+                          value={editName}
+                          autoFocus
+                          onChange={(e) => setEditName(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              void guard(() =>
+                                deviceService.renameProfile(profile.id, editName),
+                              ).then(() => setEditing(null));
+                            }
+                            if (e.key === "Escape") setEditing(null);
+                          }}
+                          className="h-8 rounded-md border border-brass bg-panel-2 px-2.5 text-[13.5px] text-ink focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          aria-label="Confirm rename"
+                          onClick={() =>
+                            void guard(() =>
+                              deviceService.renameProfile(profile.id, editName),
+                            ).then(() => setEditing(null))
+                          }
+                          className="rounded p-1.5 text-live hover:bg-panel-3"
+                        >
+                          <Check size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          aria-label="Cancel rename"
+                          onClick={() => setEditing(null)}
+                          className="rounded p-1.5 text-ink-faint hover:bg-panel-3"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="text-[14px] font-medium text-ink">
+                          {profile.name}
+                          {store.lastApplied === profile.id && (
+                            <span className="readout ml-2 text-[11px] text-ink-faint">
+                              last applied
+                            </span>
+                          )}
+                        </p>
+                        <p className="mt-0.5 text-[12.5px] text-ink-dim">
+                          {contents.length
+                            ? contents.join(" · ")
+                            : "Nothing stored"}
+                        </p>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      onClick={() => void apply(profile.id, profile.name)}
+                      disabled={!connected || !contents.length}
+                    >
+                      Apply
+                    </Button>
+                    <button
+                      type="button"
+                      aria-label={`Rename ${profile.name}`}
+                      onClick={() => {
+                        setEditing(profile.id);
+                        setEditName(profile.name);
+                      }}
+                      className="rounded p-2 text-ink-faint hover:bg-panel-2 hover:text-ink"
+                    >
+                      <Pencil size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Delete ${profile.name}`}
+                      onClick={() =>
+                        void guard(() => deviceService.deleteProfile(profile.id))
+                      }
+                      className="rounded p-2 text-ink-faint hover:bg-panel-2 hover:text-fault"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <p className="text-[13px] text-ink-dim">
+            No profiles yet. Set the headset up the way you want it, then save
+            it here.
+          </p>
+        )}
+      </Panel>
+
+      {report && (
+        <Panel legend="Result" title={`Applied "${report.name}"`}>
+          {report.report.applied.length > 0 && (
+            <p className="text-[13px] text-ink-dim">
+              Sent to the headset: {report.report.applied.join(", ")}.
+            </p>
+          )}
+          {report.report.failed.length > 0 && (
+            <ul className="mt-3 space-y-1.5">
+              {report.report.failed.map((f) => (
+                <li key={f.setting} className="text-[13px] text-fault">
+                  {f.setting} — {f.reason}
+                </li>
+              ))}
+            </ul>
+          )}
+          {report.report.applied.length === 0 &&
+            report.report.failed.length === 0 && (
+              <p className="text-[13px] text-ink-dim">
+                This profile holds no settings, so nothing was sent.
+              </p>
+            )}
+        </Panel>
+      )}
+
+      <Panel legend="How this works" title="Profiles live here, not on the headset">
+        <div className="space-y-3 text-[13px] leading-relaxed text-ink-dim">
+          <p>
+            This headset has no onboard memory for settings, so there is no
+            "save to device" button here — there is no such command in its
+            protocol. Applying a profile sends each setting to the device one at
+            a time, exactly as if you had set them by hand.
+          </p>
+          <p>
+            That also means the headset can be changed from its own controls
+            without this application knowing. A profile marked as last applied
+            is a record of what was sent, not a claim about what the hardware is
+            currently doing.
+          </p>
+          <p className="readout text-[12px] text-ink-faint">
+            ~/.config/headset-control-center/profiles.json
+          </p>
+        </div>
+      </Panel>
+    </div>
+  );
+}

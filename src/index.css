@@ -1,0 +1,158 @@
+@import "tailwindcss";
+
+@import "@fontsource-variable/archivo/index.css";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+
+/* Design tokens.
+ *
+ * The palette is graphite with a cool cast — anodised aluminium in shadow —
+ * rather than near-black, and the single accent is a warm brass, the colour of
+ * instrument backlighting. Status hues are deliberately kept in a different
+ * temperature band from the accent so an active control never reads as an
+ * alarm. Status is always accompanied by a text label as well: colour never
+ * carries a state on its own.
+ */
+@theme {
+  --color-ground: #101315;
+  --color-panel: #171b1e;
+  --color-panel-2: #1e2429;
+  --color-panel-3: #252d33;
+  --color-line: #2a3238;
+  --color-line-bright: #3a444b;
+
+  --color-ink: #e6eaec;
+  --color-ink-dim: #96a1a8;
+  --color-ink-faint: #6e7a81;
+
+  --color-brass: #d9a441;
+  --color-brass-deep: #8a6620;
+
+  --color-live: #4fc48a;
+  --color-warn: #f2884b;
+  --color-fault: #e5595e;
+
+  --font-sans: "Archivo Variable", ui-sans-serif, system-ui, sans-serif;
+  /* Every value that came from the hardware is set in mono. It is a reading,
+   * not prose, and the interface should not blur that line. */
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --radius-panel: 10px;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--color-ground);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+
+  /* A desktop application, not a document: text is UI unless marked otherwise. */
+  * {
+    user-select: none;
+  }
+
+  .selectable,
+  input,
+  textarea {
+    user-select: text;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brass);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-line-bright);
+    border-radius: 5px;
+    border: 3px solid var(--color-ground);
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+@layer components {
+  /* Screen-printed panel labels, as on the front of a rack unit. */
+  .legend {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-ink-faint);
+  }
+
+  /* A horizontal control. Styled rather than replaced, so arrow keys, Home,
+   * End and screen readers keep working without any of it being reimplemented.
+   * --fill is set inline from the current value. */
+  .range {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 20px;
+    background: transparent;
+    cursor: pointer;
+  }
+  .range::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 2px;
+    background: linear-gradient(
+      to right,
+      var(--color-brass) var(--fill, 0%),
+      var(--color-panel-3) var(--fill, 0%)
+    );
+  }
+  .range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 13px;
+    height: 13px;
+    margin-top: -4.5px;
+    border-radius: 3px;
+    border: 1px solid var(--color-line-bright);
+    background: var(--color-ink);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+  }
+  .range:disabled {
+    cursor: not-allowed;
+  }
+  .range:disabled::-webkit-slider-runnable-track {
+    background: var(--color-panel-3);
+  }
+  .range:disabled::-webkit-slider-thumb {
+    background: var(--color-ink-faint);
+  }
+
+  /* A hardware reading. Tabular so digits do not shift as values change. */
+  .readout {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
