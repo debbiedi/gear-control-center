@@ -18,9 +18,11 @@ export function SettingsPage({ snapshot }: { snapshot: Snapshot | null }) {
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [diagnostics, setDiagnostics] = useState<string | null>(null);
+  const [version, setVersion] = useState<string | null>(null);
 
   useEffect(() => {
     void deviceService.getSettings().then(setSettings).catch(() => setSettings(null));
+    void deviceService.appVersion().then(setVersion).catch(() => setVersion(null));
   }, []);
 
   /**
@@ -172,7 +174,7 @@ export function SettingsPage({ snapshot }: { snapshot: Snapshot | null }) {
             marked unsupported rather than shipped on a guess.
           </p>
           <p className="readout text-[12px] text-ink-faint">
-            Version 0.1.0 · Linux
+            {version ? `Version ${version}` : "Version unavailable"} · Linux
           </p>
         </div>
       </Panel>

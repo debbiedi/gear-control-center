@@ -482,3 +482,9 @@ pub fn export_diagnostics(app: State<'_, AppState>) -> DeviceResult<String> {
         .map_err(|e| DeviceError::Transport(format!("could not write {}: {e}", path.display())))?;
     Ok(path.display().to_string())
 }
+
+/// The build's own version, so the About panel cannot drift from the package.
+#[tauri::command]
+pub fn app_version() -> &'static str {
+    env!("CARGO_PKG_VERSION")
+}

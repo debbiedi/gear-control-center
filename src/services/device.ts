@@ -55,4 +55,5 @@ export const deviceService = {
   setSettings: (settings: AppSettings) =>
     invoke<AppSettings>("set_settings", { settings }),
   exportDiagnostics: () => invoke<string>("export_diagnostics"),
+  appVersion: () => invoke<string>("app_version"),
 };

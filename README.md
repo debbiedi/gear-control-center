@@ -53,8 +53,8 @@ Download it from [Releases](../../releases), make it executable, run it.
 Nothing is installed.
 
 ```bash
-chmod +x headset-control-center-0.1.0-x86_64.AppImage
-./headset-control-center-0.1.0-x86_64.AppImage
+chmod +x headset-control-center-0.1.1-x86_64.AppImage
+./headset-control-center-0.1.1-x86_64.AppImage
 ```
 
 **Read this before downloading.** The published AppImage was built on Arch
@@ -73,10 +73,26 @@ about five minutes and the instructions are below.
 
 Build from source. See below.
 
-### Arch Linux
+### Arch Linux and derivatives
 
-No AUR package yet. The AppImage above works, or build from source — every
-dependency is in the official repositories.
+A `PKGBUILD` lives in [`packaging/aur`](packaging/aur). It builds from the
+tagged release and installs the binary, a desktop entry and the icons:
+
+```bash
+git clone https://github.com/debbiedi/headset-control-center.git
+cd headset-control-center/packaging/aur
+makepkg -si
+```
+
+`makepkg -s` pulls the build dependencies (`rust`, `nodejs`, `npm`) and `-i`
+installs the finished package, so this is the whole procedure. Removing it
+later is `sudo pacman -R headset-control-center`.
+
+Every runtime dependency is in the official repositories — this is the
+distribution the application was developed and tested on.
+
+An AUR package will follow; the publishing steps are in
+[`packaging/aur/README.md`](packaging/aur/README.md).
 
 ### Requirements
 
