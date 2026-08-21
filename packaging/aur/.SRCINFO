@@ -1,6 +1,6 @@
 pkgbase = headset-control-center
 	pkgdesc = Desktop control panel for USB gaming headsets — shows only what the hardware actually reports
-	pkgver = 0.1.1
+	pkgver = 0.2.0
 	pkgrel = 1
 	url = https://github.com/debbiedi/headset-control-center
 	arch = x86_64
@@ -17,7 +17,7 @@ pkgbase = headset-control-center
 	depends = systemd-libs
 	depends = hicolor-icon-theme
 	options = !lto
-	source = headset-control-center-0.1.1.tar.gz::https://github.com/debbiedi/headset-control-center/archive/refs/tags/v0.1.1.tar.gz
-	sha256sums = 735128c76c9bf56ae39bc2e147da7da5b5f750999deaab6b5ef9abeb159dc9dc
+	source = headset-control-center-0.2.0.tar.gz::https://github.com/debbiedi/headset-control-center/archive/refs/tags/v0.2.0.tar.gz
+	sha256sums = 5981912e8885da7c30b9c6e793136eedada75c68dc491a74a969cc36d6c98bde
 
 pkgname = headset-control-center
