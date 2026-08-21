@@ -16,6 +16,11 @@ makepkg -si
 `makepkg` pulls the release tarball named in `pkgver`, not your working tree —
 so to test a change, tag it first, or point `source=()` at a local path.
 
+The `sha256sums` line is a checksum **of the tarball this file lives in**, so
+the copy inside any given release tarball cannot be self-consistent. The
+authoritative copies are here on `main` and in the AUR repository; if you build
+from a copy extracted out of a release archive, run `updpkgsums` first.
+
 ## Publishing to the AUR
 
 Requires an [AUR account](https://aur.archlinux.org/register) with an SSH key

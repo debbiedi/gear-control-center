@@ -17,7 +17,7 @@ depends=(
 makedepends=('rust' 'cargo' 'nodejs' 'npm' 'pkgconf')
 options=('!lto')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('REPLACE_WITH_TARBALL_SHA256')
+sha256sums=('86e9b9a6482df567e7dd504c9c58c4f55634925a9556baceaf217d89115d98ca')
 
 prepare() {
   cd "$pkgname-$pkgver"
@@ -30,7 +30,10 @@ prepare() {
 build() {
   cd "$pkgname-$pkgver"
   export RUSTUP_TOOLCHAIN=stable
-  export CARGO_TARGET_DIR=src-tauri/target
+  # No CARGO_TARGET_DIR here: the Tauri CLI changes into src-tauri before
+  # invoking cargo, so a relative value doubles the path and the binary lands
+  # somewhere package() cannot find it.
+  #
   # --no-bundle: the AppImage and deb bundlers are for the project's own
   # releases. Here pacman is the package manager, so only the binary is wanted.
   npm run tauri build -- --no-bundle
