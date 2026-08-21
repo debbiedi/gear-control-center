@@ -12,7 +12,8 @@ at all — a single source would not have been.
 
 * [`Sapd/HeadsetControl`](https://github.com/Sapd/HeadsetControl) —
   `lib/devices/steelseries_arctis_7_plus.hpp`, `protocols/steelseries_protocol.hpp`
-* `linux-arctis-manager` 2.5.0b3 — `arctis_manager/devices/arctis_7_plus.yaml`
+* [`elegos/Linux-Arctis-Manager`](https://github.com/elegos/Linux-Arctis-Manager) 2.5.0b3 —
+  `arctis_manager/devices/arctis_7_plus.yaml`
 
 Nothing outside these two sources has been sent to the device. Where behaviour
 was unknown, the feature was left unimplemented rather than probed by guessing

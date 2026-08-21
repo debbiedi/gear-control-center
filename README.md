@@ -1,7 +1,10 @@
 # Headset Control Center
 
-A desktop application for controlling USB gaming headsets on Linux.
-Tauri v2 and React in front, Rust and hidapi behind.
+[![CI](https://github.com/debbiedi/headset-control-center/actions/workflows/ci.yml/badge.svg)](https://github.com/debbiedi/headset-control-center/actions/workflows/ci.yml)
+[![Licence: MIT](https://img.shields.io/badge/licence-MIT-d9a441.svg)](LICENSE)
+
+A desktop control panel for USB gaming headsets on Linux. Tauri v2 and React in
+front, Rust and hidapi behind.
 
 It is local software: no account, no telemetry, no network access. It talks to
 the headset over USB and to nothing else.
@@ -10,112 +13,157 @@ the headset over USB and to nothing else.
 
 ## Why this exists
 
-Vendor software for these devices is Windows-only, and the Linux alternatives
-are command-line tools. This is a full control panel — but one built on a rule
-the vendor software does not follow:
+The vendor software for these headsets is Windows-only, and the Linux
+alternatives are command-line tools. This is a full control panel — built on
+one rule the vendor software does not follow:
 
 > **A control exists only if it reaches the device.**
 
 If the headset cannot do something, the application says so in the place you
-would have looked for it. Nothing is simulated in software and presented as a
+would have looked for it. Nothing is done in software and presented as a
 hardware feature, and no button reports success for a command that was never
 sent.
 
-Two consequences you can see immediately:
+Two consequences you can see in the first screenshot:
 
 * **The battery gauge has four segments, not a percentage bar.** This headset
   reports five levels — 0, 25, 50, 75, 100. A smoothly moving percentage would
-  be invented.
+  be an invention, and a number that sat at exactly 75% for an hour would
+  rightly cost you your trust in every other reading on the page.
 * **There is no "save to device" button**, because the hardware has no profile
-  memory. Profiles are stored here and applied by sending each setting.
+  memory. Profiles are stored by the application and applied by sending each
+  setting, and the Profiles page says exactly that.
 
 ## Supported hardware
 
 | Device | USB ids | Status |
 | ------ | ------- | ------ |
 | SteelSeries Arctis 7+ | `1038:220e` | Fully supported, verified against hardware |
-| Arctis 7+ PS5 / Xbox / Destiny | `1038:2212`, `2216`, `2236` | Same protocol, untested `[unverified]` |
+| Arctis 7+ PS5 / Xbox / Destiny | `1038:2212`, `2216`, `2236` | Same protocol, untested |
 | Simulated device | — | Always available, for development |
 
-Adding a device is one file under `src-tauri/src/device/devices/` and one
-registry entry. No interface code changes — the interface is driven by what the
-device reports it can do. See [docs/protocol.md](docs/protocol.md).
+Other headsets are not supported yet, and will not be added on guesswork — see
+[Adding a device](#adding-a-device).
+
+## Install
+
+### AppImage
+
+Download the AppImage from [Releases](../../releases), make it executable, run
+it. Nothing is installed.
+
+```bash
+chmod +x 'Headset Control Center_0.1.0_amd64.AppImage'
+./'Headset Control Center_0.1.0_amd64.AppImage'
+```
+
+### Debian / Ubuntu
+
+```bash
+sudo apt install ./headset-control-center_0.1.0_amd64.deb
+```
+
+Then launch **Headset Control Center** from your applications menu.
+
+### Arch Linux
+
+No AUR package yet. Build from source, below — the dependencies are all in the
+official repositories.
+
+### Requirements
+
+* Linux with glibc 2.35 or newer (Ubuntu 22.04 and later, or any current
+  rolling distribution)
+* `webkit2gtk` 4.1, GTK 3, and an ALSA-capable sound stack — PipeWire and
+  PulseAudio both work, since the application drives the device's own hardware
+  mixer rather than a software one
+* **No udev rule on a current distribution.** Most ship one that already grants
+  the logged-in user access to headset HID devices. If yours does not, see
+  [docs/hardware.md](docs/hardware.md).
+* **No root, ever.** If something asks you for a password to run this, it is
+  not this.
 
 ## What it does
 
 * Battery level and charging state, at the device's own resolution
 * ChatMix dial position, live
-* Output volume and mute — the headset's own hardware controls, via ALSA
+* Output volume and mute — the headset's own hardware controls, so the change
+  applies to every application and survives this one being closed
 * Microphone level and mute
 * Sidetone, four hardware steps
-* Ten-band equaliser applied by the headset itself, plus its four firmware
-  presets
+* Ten-band equaliser applied inside the headset, plus its four firmware presets
 * Auto shut-off timer
 * Profiles, stored locally and applied setting by setting
-* System tray with battery and both mutes; start with the system; low battery
+* System tray with battery and both mutes, start with the system, low battery
   warning
-* Diagnostics report for bug reports
+* A diagnostics report for bug reports
+
+<p align="center">
+  <img src="docs/screenshots/02-equaliser.png" width="49%" alt="Equaliser">
+  <img src="docs/screenshots/03-device.png" width="49%" alt="Device">
+</p>
 
 ### What it deliberately does not do
 
-No RGB (the hardware has none), no firmware updating (no documented path), no
-microphone noise reduction, gate or compressor (not in this hardware, and doing
-it in software and calling it a device feature would be a lie), no onboard
-profiles, no volume limiter. Each appears in the application marked
-unsupported rather than being quietly absent.
+No RGB (the hardware has none). No firmware updating (there is no documented
+update path, and a firmware writer built on guesswork is how headsets die). No
+microphone noise reduction, gate or compressor — doing that in software and
+calling it a device feature would be a lie. No onboard profiles, no volume
+limiter.
 
-## Install
+Each of these appears in the application marked as unsupported, rather than
+being quietly missing.
 
-Download the AppImage or the `.deb` from the releases page, or build it:
-
-```bash
-npm install
-npm run tauri build          # AppImage + deb in src-tauri/target/release/bundle/
-```
-
-On a distribution with a recent toolchain, the AppImage step needs two
-environment variables — `linuxdeploy` ships an old `strip` that cannot read
-`.relr.dyn` sections, and its own AppImage needs FUSE unless told to extract
-itself:
+## Build from source
 
 ```bash
-NO_STRIP=true APPIMAGE_EXTRACT_AND_RUN=1 npm run tauri build -- --bundles appimage
-npm run tauri build -- --bundles deb        # the deb needs neither
-```
-
-No udev rule is needed on a current distribution — see
-[docs/hardware.md](docs/hardware.md) if your headset is not detected.
-
-## Running from source
-
-```bash
+git clone https://github.com/debbiedi/headset-control-center.git
+cd headset-control-center
 npm install
 npm run tauri dev
 ```
 
-Without hardware attached:
+Packaging:
+
+```bash
+npm run tauri build -- --bundles deb
+
+# The AppImage step needs two variables on a modern toolchain: linuxdeploy
+# ships an old strip that cannot read .relr.dyn sections, and its own AppImage
+# wants FUSE unless told to extract itself.
+NO_STRIP=true APPIMAGE_EXTRACT_AND_RUN=1 npm run tauri build -- --bundles appimage
+```
+
+A package is linked against the glibc of whatever built it, so one built on a
+rolling distribution will not start on Ubuntu. The releases here are built on
+Ubuntu 22.04 by CI for that reason.
+
+### Without hardware
 
 ```bash
 npm run tauri dev -- -- --simulated
 ```
 
-The same switch lives in **Settings → Use a simulated device**. Every reading
-from it is labelled as simulated, everywhere it appears.
+The same switch lives in **Settings → Use a simulated device**. The stand-in
+reports the same capabilities and the same resolution as the real thing, so an
+interface built against it cannot assume precision the hardware will not
+deliver — and every reading from it is labelled as simulated wherever it
+appears.
 
 ## Tests
 
 ```bash
-npm run build                                     # typecheck and bundle
 npm test                                          # interface arithmetic
+npm run build                                     # typecheck and bundle
 cargo test --manifest-path src-tauri/Cargo.toml   # protocol, encoding, storage
 ```
 
 The tests cover the places where a wrong number would either reach the hardware
 or misrepresent what it reported: equaliser dB-to-byte encoding, battery level
-mapping, mixer ranges, fader geometry, and profile round-trips.
+mapping, mixer ranges, fader geometry, profile round-trips and migration.
 
-The hardware itself is checked with a probe that runs the same device layer
-without a window in the way:
+Hardware itself is checked with a probe that runs the same device layer without
+a window in the way:
 
 ```bash
 cd src-tauri
@@ -138,20 +186,44 @@ layer above it changing. `DeviceProtocol` returns `Unsupported` for anything a
 device cannot do, and the interface renders that as "not supported by this
 device" rather than as an error.
 
-A single background thread in Rust reads the device roughly once a second and
-pushes a snapshot to the window. That one reader also covers hot-plug: a dongle
-appearing is opened on the next pass, and one disappearing surfaces as a failed
-read rather than as stale numbers left on screen.
+One background thread in Rust reads the device roughly once a second and pushes
+a snapshot to the window. That single reader also covers hot-plug: a dongle
+appearing is opened on the next pass, and one disappearing is released after
+three failed reads rather than leaving stale numbers on screen.
+
+### Adding a device
+
+One file under `src-tauri/src/device/devices/` and one registry entry in
+`discovery.rs`. No interface code changes — the interface is driven by what the
+device reports it can do.
+
+The bar for adding one is a **documented** protocol: an existing open-source
+implementation, a packet capture, or a vendor document. Nothing here was
+discovered by sending opcodes at hardware to see what happened, because an
+undocumented write to a headset's control interface is not a reversible
+experiment. See [docs/protocol.md](docs/protocol.md).
 
 ## Documentation
 
-* [Hardware notes](docs/hardware.md) — interfaces, permissions, what the device
-  can and cannot do
+* [Hardware notes](docs/hardware.md) — interfaces, permissions, and exactly
+  what the device can and cannot do
 * [Control protocol](docs/protocol.md) — the command table, its two independent
   sources, and how to add a device
 * [Troubleshooting](docs/troubleshooting.md) — conflicts, permissions, bug
   reports
 
+## Credits
+
+The Arctis 7+ command set was learned from two independent open-source
+projects, which agree byte for byte. That agreement is the reason it was
+trusted enough to send to hardware at all:
+
+* [Sapd/HeadsetControl](https://github.com/Sapd/HeadsetControl)
+* [elegos/Linux-Arctis-Manager](https://github.com/elegos/Linux-Arctis-Manager)
+
+No code was taken from either — only the protocol facts, which are documented
+in [docs/protocol.md](docs/protocol.md) with their sources.
+
 ## Licence
 
-Not yet chosen.
+[MIT](LICENSE).
