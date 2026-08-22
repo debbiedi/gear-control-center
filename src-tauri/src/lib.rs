@@ -7,7 +7,7 @@ pub mod settings;
 pub mod storage;
 pub mod system;
 
-use tauri::{Manager, WindowEvent};
+use tauri::Manager;
 
 use commands::AppState;
 
@@ -46,41 +46,14 @@ pub fn run() {
             system::ipc::spawn(app.handle().clone());
 
             if has_flag("--minimised") {
+                // Closed rather than hidden: the tray builds a window when one
+                // is asked for, and a built window is one whose title bar
+                // works.
                 if let Some(window) = app.webview_windows().values().next() {
-                    // Minimised, not hidden, for the same reason closing is:
-                    // a surface that is destroyed and rebuilt comes back with
-                    // a decoration that no longer takes clicks. The surface
-                    // this window is given at startup is the one it keeps.
-                    let _ = window.minimize();
+                    let _ = window.close();
                 }
             }
             Ok(())
-        })
-        .on_window_event(|window, event| {
-            if let WindowEvent::CloseRequested { api, .. } = event {
-                let close_to_tray = window
-                    .try_state::<AppState>()
-                    .map(|s| s.settings.lock().close_to_tray)
-                    .unwrap_or(false);
-                if close_to_tray {
-                    // Keep reading the headset in the background — the tray
-                    // entry is the point of the setting.
-                    //
-                    // Minimised rather than hidden: on Wayland `hide()`
-                    // destroys the toplevel surface, and the one built to
-                    // replace it comes back with a decoration the compositor
-                    // draws but no longer routes clicks to. The window looked
-                    // fine and its own close and minimise buttons did nothing.
-                    // Minimising keeps the surface, so the decoration keeps
-                    // working.
-                    api.prevent_close();
-                    // Out of the task bar as well: the tray entry is where it
-                    // lives while it is closed, and two places to click on the
-                    // same hidden window is one too many.
-                    let _ = window.set_skip_taskbar(true);
-                    let _ = window.minimize();
-                }
-            }
         })
         .invoke_handler(tauri::generate_handler![
             commands::get_snapshot,
@@ -111,12 +84,25 @@ pub fn run() {
         ])
         .build(tauri::generate_context!())
         .expect("error while building the application")
-        .run(|handle, event| {
+        .run(|handle, event| match event {
+            // Closing the window does not end the application: the headset
+            // goes on being read and the tray entry stays, which is the whole
+            // point of the setting. Quitting is done from the tray.
+            tauri::RunEvent::ExitRequested { api, .. } => {
+                let close_to_tray = handle
+                    .try_state::<AppState>()
+                    .map(|s| s.settings.lock().close_to_tray)
+                    .unwrap_or(false);
+                if close_to_tray {
+                    api.prevent_exit();
+                }
+            }
             // Quitting must take the virtual outputs with it. A hard kill
             // cannot be caught here, which is why every start reconciles.
-            if matches!(event, tauri::RunEvent::Exit) {
+            tauri::RunEvent::Exit => {
                 handle.state::<AppState>().chatmix.lock().disable();
                 system::ipc::cleanup();
             }
+            _ => {}
         });
 }

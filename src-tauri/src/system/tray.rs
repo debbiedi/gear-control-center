@@ -93,14 +93,30 @@ pub fn show_window(app: &AppHandle) {
     let handle = app.clone();
     if let Err(e) = app.run_on_main_thread(move || {
         if let Some(window) = handle.webview_windows().values().next() {
-            // `show()` first for the case the window really is hidden — the
-            // application starts that way with "start in the tray" on. After
-            // that it is only ever minimised, and unminimising is what brings
-            // it back with its decoration intact.
-            let _ = window.set_skip_taskbar(false);
-            let _ = window.show();
             let _ = window.unminimize();
             let _ = window.set_focus();
+            return;
+        }
+        // Closing to the tray closes the window outright, so there is nothing
+        // to bring back — one is built.
+        //
+        // Wayland leaves no third option. Hiding a window destroys its surface,
+        // and the replacement comes back with a decoration the compositor
+        // draws but does not route clicks to: the title bar buttons stop
+        // working. Minimising keeps the surface but cannot be undone —
+        // xdg-shell lets a client minimise itself and gives it no way back.
+        // A window that is built is a window that works.
+        let Some(config) = handle.config().app.windows.first().cloned() else {
+            log::warn!("no window is declared in the configuration to build");
+            return;
+        };
+        match tauri::WebviewWindowBuilder::from_config(&handle, &config) {
+            Ok(builder) => {
+                if let Err(e) = builder.build() {
+                    log::warn!("could not build the window: {e}");
+                }
+            }
+            Err(e) => log::warn!("could not read the window configuration: {e}"),
         }
     }) {
         log::warn!("could not reach the main thread to show the window: {e}");

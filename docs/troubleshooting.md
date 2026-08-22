@@ -60,43 +60,29 @@ cargo run --example probe -- preset 0     # back to flat
 An error there is a hardware or permission problem; silence with an `OK` means
 the device accepted it.
 
-## Closing the window leaves it in the task bar
+## Closing the window and getting it back
 
-Closing minimises the window rather than hiding it. That is deliberate: on
-Wayland, hiding destroys the window's surface, and the one built to replace it
-comes back with a decoration the compositor draws but no longer routes clicks
-to — the window looks normal and its own close and minimise buttons do nothing.
-Minimising keeps the surface, so the buttons keep working.
+Closing the window with **Close to tray** on destroys it and leaves the
+process running behind the tray icon. Opening from the tray builds a new
+window. That is deliberate, and it is the only arrangement that works on
+Wayland:
 
-The application asks to be left out of the task bar while it is closed, but
-that request is an X11 hint and Wayland has no equivalent, so on a Wayland
-session it has no effect. On KDE a window rule does it:
+* **Hiding** destroys the window's surface anyway, and the one built to
+  replace it comes back with a decoration the compositor draws but no longer
+  routes clicks to — the window looks normal and its own close and minimise
+  buttons do nothing.
+* **Minimising** keeps the surface and the buttons, but xdg-shell lets a
+  client minimise itself and gives it no way back, so the tray could no
+  longer open it.
+* **Closing and rebuilding** gives a window created exactly the way the one
+  at launch is created, which is the one case where everything works.
 
-**System Settings → Window Management → Window Rules → Add New**, match the
-window class `headset-control-center` exactly, then force **Skip taskbar: Yes**.
+A side effect worth knowing: the window is gone while it is closed, so it is
+absent from the task bar and the window switcher, and it comes back at its
+default size and position rather than where you last left it.
 
-Or write it directly and reload:
-
-```ini
-# ~/.config/kwinrulesrc
-[General]
-count=1
-rules=headset-control-center-tray
-
-[headset-control-center-tray]
-Description=Headset Control Center — tray only
-skiptaskbar=true
-skiptaskbarrule=2
-wmclass=headset-control-center
-wmclassmatch=1
-```
-
-```bash
-gdbus call --session --dest org.kde.KWin --object-path /KWin \
-  --method org.kde.KWin.reconfigure
-```
-
-To undo it, delete the rule in that same settings page.
+Nothing is lost — settings and device state live in the process, not in the
+window.
 
 ## Writing a bug report
 
