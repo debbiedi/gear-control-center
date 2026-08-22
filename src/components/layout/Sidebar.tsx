@@ -8,10 +8,8 @@ import {
   SlidersHorizontal,
   Volume2,
 } from "lucide-react";
-import { StatusLamp } from "@/components/ui/StatusLamp";
 import { useT } from "@/i18n";
 import { cn } from "@/lib/cn";
-import { connectionLabel, connectionTone } from "@/types/device";
 import type { Capabilities, Snapshot } from "@/types/device";
 
 export type View =
@@ -66,7 +64,6 @@ export function Sidebar({
   snapshot: Snapshot | null;
 }) {
   const t = useT();
-  const connection = snapshot?.connection ?? "unknown";
   const caps = snapshot?.capabilities ?? null;
   const items = NAV.filter((item) => !caps || !item.supported || item.supported(caps));
 
@@ -83,7 +80,7 @@ export function Sidebar({
   return (
     <nav
       aria-label={t.app.sections}
-      className="flex w-[224px] shrink-0 flex-col border-r border-line bg-panel"
+      className="flex w-[212px] shrink-0 flex-col border-r border-line bg-panel/60"
     >
       <div className="flex items-center gap-2.5 border-b border-line px-5 py-4">
         <span
@@ -94,7 +91,9 @@ export function Sidebar({
           <p className="truncate text-[13px] font-semibold tracking-tight text-ink">
             {t.app.name}
           </p>
-          <p className="legend mt-0.5">{t.app.tagline}</p>
+          <p className="legend mt-0.5 truncate text-[9px] tracking-[0.1em]">
+            {t.app.tagline}
+          </p>
         </div>
       </div>
 
@@ -128,16 +127,6 @@ export function Sidebar({
         ))}
       </ul>
 
-      <div className="border-t border-line px-5 py-4">
-        <p className="legend mb-2">{t.app.connection}</p>
-        <StatusLamp
-          tone={connectionTone(connection)}
-          label={connectionLabel(connection, t)}
-        />
-        <p className="readout mt-1 truncate text-[12px] text-ink-faint">
-          {snapshot?.device?.name ?? t.app.noDeviceDetected}
-        </p>
-      </div>
     </nav>
   );
 }

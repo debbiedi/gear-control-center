@@ -15,6 +15,12 @@ interface SliderProps {
   className?: string;
 }
 
+/**
+ * Past this many marks the row stops being countable and becomes a smear, so
+ * it fades out rather than pretending otherwise.
+ */
+const TOO_DENSE = 140;
+
 export function Slider({
   value,
   min,
@@ -27,17 +33,23 @@ export function Slider({
   disabled = false,
   className,
 }: SliderProps) {
-  const fill = ((value - min) / Math.max(1, max - min)) * 100;
+  const span = Math.max(1, max - min);
+  const fill = ((value - min) / span) * 100;
+
+  // The signature: the track carries one mark per position the hardware
+  // accepts. Seventy-eight of them cost one gradient, not seventy-eight
+  // elements.
+  const marks = Math.max(1, Math.round(span / step));
 
   return (
     <div className={cn("w-full", className)}>
-      <div className="mb-2 flex items-baseline justify-between gap-4">
+      <div className="mb-2.5 flex items-baseline justify-between gap-4">
         <span className="legend">{label}</span>
         {readout && (
           <span
             className={cn(
-              "readout text-[13px]",
-              disabled ? "text-ink-faint" : "text-ink",
+              "readout text-[14px]",
+              disabled ? "text-ink-faint" : "lit",
             )}
           >
             {readout}
@@ -47,7 +59,11 @@ export function Slider({
       <input
         type="range"
         className="range"
-        style={{ ["--fill" as string]: `${fill}%` }}
+        style={{
+          ["--fill" as string]: `${fill}%`,
+          ["--tick-step" as string]: `${100 / marks}%`,
+          ["--tick-opacity" as string]: marks > TOO_DENSE ? "0" : "1",
+        }}
         value={value}
         min={min}
         max={max}
@@ -57,7 +73,9 @@ export function Slider({
         aria-valuetext={readout}
         onChange={(e) => onChange(Number(e.target.value))}
       />
-      {detail && <p className="mt-1 text-[12px] text-ink-faint">{detail}</p>}
+      {detail && (
+        <p className="mt-2 text-[12px] text-ink-faint">{detail}</p>
+      )}
     </div>
   );
 }

@@ -60,8 +60,8 @@ Download it from [Releases](../../releases), make it executable, run it.
 Nothing is installed.
 
 ```bash
-chmod +x headset-control-center-0.3.0-x86_64.AppImage
-./headset-control-center-0.3.0-x86_64.AppImage
+chmod +x headset-control-center-0.4.0-x86_64.AppImage
+./headset-control-center-0.4.0-x86_64.AppImage
 ```
 
 **Read this before downloading.** The published AppImage was built on Arch

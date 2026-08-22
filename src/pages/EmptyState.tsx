@@ -19,7 +19,7 @@ export function EmptyState() {
   return (
     <div className="flex h-full items-center justify-center p-8">
       <div className="w-full max-w-[440px] text-center">
-        <div className="mx-auto mb-5 flex size-14 items-center justify-center rounded-panel border border-line bg-panel">
+        <div className="well mx-auto mb-5 flex size-14 items-center justify-center rounded-panel">
           <Headphones size={22} className="text-ink-faint" />
         </div>
 

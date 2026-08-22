@@ -11,6 +11,14 @@ interface PanelProps {
   children: ReactNode;
 }
 
+/**
+ * One face of the panel.
+ *
+ * Separation is elevation, not outline: the surface catches light along its
+ * top edge and sits on a soft shadow. An outline on every card made the page
+ * read as a list of identical boxes with nothing more important than anything
+ * else.
+ */
 export function Panel({
   legend,
   title,
@@ -20,30 +28,26 @@ export function Panel({
   children,
 }: PanelProps) {
   return (
-    <section
-      className={cn(
-        "rounded-panel border border-line bg-panel",
-        "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.03)]",
-        className,
-      )}
-    >
+    <section className={cn("face", className)}>
       {(legend || title || actions) && (
-        <header className="flex items-start justify-between gap-4 border-b border-line px-5 py-3.5">
+        <header className="flex items-start justify-between gap-4 px-5 pb-4 pt-4">
           <div className="min-w-0">
-            {legend && <p className="legend mb-1">{legend}</p>}
+            {legend && <p className="legend mb-1.5">{legend}</p>}
             {title && (
-              <h2 className="truncate text-[15px] font-semibold tracking-tight text-ink">
-                {title}
-              </h2>
+              <h2 className="display truncate text-[16px] text-ink">{title}</h2>
             )}
             {description && (
-              <p className="mt-0.5 text-[13px] text-ink-dim">{description}</p>
+              <p className="mt-1 max-w-[62ch] text-[13px] leading-relaxed text-ink-dim">
+                {description}
+              </p>
             )}
           </div>
           {actions && <div className="shrink-0">{actions}</div>}
         </header>
       )}
-      <div className="p-5">{children}</div>
+      <div className={cn("px-5 pb-5", !(legend || title || actions) && "pt-5")}>
+        {children}
+      </div>
     </section>
   );
 }

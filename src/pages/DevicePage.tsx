@@ -156,7 +156,7 @@ export function DevicePage({ snapshot }: { snapshot: Snapshot | null }) {
             {discovered.map((d) => (
               <li
                 key={d.info.id}
-                className="flex items-center justify-between gap-4 rounded-md border border-line bg-panel-2 px-4 py-3"
+                className="well flex items-center justify-between gap-4 rounded-md px-4 py-3"
               >
                 <div className="min-w-0">
                   <p className="truncate text-[13.5px] font-medium text-ink">

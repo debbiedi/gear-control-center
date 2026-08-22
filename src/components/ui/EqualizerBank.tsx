@@ -198,18 +198,28 @@ export function EqualizerBank({
 
   return (
     <div className="relative">
-      {/* Grid lines at 0 dB and the two extremes. */}
+      {/* The device's own grid: a line per whole decibel, brighter at nought
+          and at the two extremes. The curve is quantised, and so is the paper
+          it is drawn on. */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0"
         style={{ top: 22, height: TRACK_H }}
       >
+        <div
+          className="absolute inset-0 opacity-70"
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(to bottom, var(--color-line) 0 1px, transparent 1px var(--db-step))",
+            ["--db-step" as string]: `${100 / (maxDb - minDb)}%`,
+          }}
+        />
         {[0, 50, 100].map((pct) => (
           <span
             key={pct}
             className={cn(
               "absolute inset-x-0 h-px",
-              pct === 50 ? "bg-line-bright" : "bg-line",
+              pct === 50 ? "bg-line-bright" : "bg-line-bright/60",
             )}
             style={{ top: `${pct}%` }}
           />

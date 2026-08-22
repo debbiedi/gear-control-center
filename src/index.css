@@ -1,32 +1,47 @@
 @import "tailwindcss";
 
-@import "@fontsource-variable/archivo/index.css";
+/* The width axis is what makes the labels look screen-printed, so the font is
+ * loaded with it rather than weight alone. */
+@import "@fontsource-variable/archivo/wdth.css";
 @import "@fontsource/ibm-plex-mono/400.css";
 @import "@fontsource/ibm-plex-mono/500.css";
 
 /* Design tokens.
  *
- * The palette is graphite with a cool cast — anodised aluminium in shadow —
- * rather than near-black, and the single accent is a warm brass, the colour of
- * instrument backlighting. Status hues are deliberately kept in a different
- * temperature band from the accent so an active control never reads as an
- * alarm. Status is always accompanied by a text label as well: colour never
+ * The window is the face of a rack unit: anodised graphite, light falling from
+ * above, controls recessed into milled wells. Two colours carry meaning and
+ * nothing else does.
+ *
+ *   brass    — what you can change. Every interactive affordance, and only
+ *              those.
+ *   phosphor — what the device said. Live readings only, faintly lit, the
+ *              colour of a backlit instrument rather than of a status.
+ *
+ * That split is the application's whole argument rendered in colour: our
+ * controls and the hardware's words are not the same kind of thing.
+ *
+ * Status hues sit in a different temperature band so an active control never
+ * reads as an alarm, and status is always accompanied by text: colour never
  * carries a state on its own.
  */
 @theme {
-  --color-ground: #101315;
-  --color-panel: #171b1e;
-  --color-panel-2: #1e2429;
-  --color-panel-3: #252d33;
-  --color-line: #2a3238;
+  --color-ground: #0e1113;
+  --color-panel: #161a1d;
+  --color-panel-2: #1c2226;
+  --color-panel-3: #232a2f;
+  /* Wells: meters and controls are set into the panel, not laid on it. */
+  --color-recess: #090b0d;
+  --color-line: #262d32;
   --color-line-bright: #3a444b;
 
-  --color-ink: #e6eaec;
-  --color-ink-dim: #96a1a8;
-  --color-ink-faint: #6e7a81;
+  --color-ink: #e8ecee;
+  --color-ink-dim: #939ea5;
+  --color-ink-faint: #6b767d;
 
   --color-brass: #d9a441;
   --color-brass-deep: #8a6620;
+
+  --color-phosphor: #d6ece1;
 
   --color-live: #4fc48a;
   --color-warn: #f2884b;
@@ -37,7 +52,7 @@
    * not prose, and the interface should not blur that line. */
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 
-  --radius-panel: 10px;
+  --radius-panel: 8px;
 }
 
 @layer base {
@@ -49,7 +64,11 @@
 
   body {
     margin: 0;
-    background: var(--color-ground);
+    /* Not a flat fill: the ground is lit from the top, like the face of
+     * something standing on a desk. */
+    background:
+      radial-gradient(120% 60% at 50% -10%, #151a1e 0%, transparent 60%),
+      var(--color-ground);
     color: var(--color-ink);
     font-family: var(--font-sans);
     font-size: 14px;
@@ -90,61 +109,127 @@
 }
 
 @layer components {
-  /* Screen-printed panel labels, as on the front of a rack unit. */
+  /* ---- Material -------------------------------------------------------
+   * Separation is done with light, not with a border on everything. A face
+   * catches the light along its top edge; a well is cut into it. */
+
+  .face {
+    background: var(--color-panel);
+    border-radius: var(--radius-panel);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.045),
+      0 1px 2px rgba(0, 0, 0, 0.4),
+      0 8px 24px -18px rgba(0, 0, 0, 0.9);
+  }
+
+  .well {
+    background: var(--color-recess);
+    box-shadow:
+      inset 0 1px 3px rgba(0, 0, 0, 0.85),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.03);
+  }
+
+  /* ---- Type -----------------------------------------------------------
+   * Screen-printed panel labels. The width axis is doing the work: wide
+   * letterforms read as engraved rather than typed. */
   .legend {
-    font-family: var(--font-mono);
+    font-family: var(--font-sans);
+    font-variation-settings: "wdth" 118, "wght" 600;
     font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
     color: var(--color-ink-faint);
   }
 
-  /* A horizontal control. Styled rather than replaced, so arrow keys, Home,
-   * End and screen readers keep working without any of it being reimplemented.
-   * --fill is set inline from the current value. */
-  .range {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 100%;
-    height: 20px;
-    background: transparent;
-    cursor: pointer;
-  }
-  .range::-webkit-slider-runnable-track {
-    height: 4px;
-    border-radius: 2px;
-    background: linear-gradient(
-      to right,
-      var(--color-brass) var(--fill, 0%),
-      var(--color-panel-3) var(--fill, 0%)
-    );
-  }
-  .range::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 13px;
-    height: 13px;
-    margin-top: -4.5px;
-    border-radius: 3px;
-    border: 1px solid var(--color-line-bright);
-    background: var(--color-ink);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
-  }
-  .range:disabled {
-    cursor: not-allowed;
-  }
-  .range:disabled::-webkit-slider-runnable-track {
-    background: var(--color-panel-3);
-  }
-  .range:disabled::-webkit-slider-thumb {
-    background: var(--color-ink-faint);
+  /* Headings, in the same widened cut as the labels so the panel reads as one
+   * piece of printing. */
+  .display {
+    font-family: var(--font-sans);
+    font-variation-settings: "wdth" 108, "wght" 600;
+    letter-spacing: -0.005em;
   }
 
   /* A hardware reading. Tabular so digits do not shift as values change. */
   .readout {
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
+  }
+
+  /* A live reading, lit. Reserved for numbers the device actually sent —
+   * never for a label, a control, or a value we chose ourselves. */
+  .lit {
+    color: var(--color-phosphor);
+    text-shadow: 0 0 12px rgba(214, 236, 225, 0.18);
+  }
+
+  /* ---- Quantisation ---------------------------------------------------
+   * The signature: a control is drawn at the resolution the hardware
+   * accepts. --tick-step is set inline as 100%/steps, so 78 marks cost one
+   * gradient rather than 78 elements. */
+  .ticks {
+    background-image: repeating-linear-gradient(
+      to right,
+      var(--color-line-bright) 0 1px,
+      transparent 1px var(--tick-step, 10%)
+    );
+    /* Below roughly two pixels a mark the row becomes a smear, so it fades
+     * out rather than pretending to still be countable. */
+    opacity: var(--tick-opacity, 1);
+  }
+
+  /* ---- The horizontal control -----------------------------------------
+   * Styled rather than replaced, so arrow keys, Home, End and screen readers
+   * keep working without any of it being reimplemented. --fill is set inline
+   * from the current value. */
+  .range {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 24px;
+    background: transparent;
+    cursor: pointer;
+  }
+  .range::-webkit-slider-runnable-track {
+    height: 10px;
+    border-radius: 5px;
+    /* The marks sit on top of the fill, not under it: a full track would
+     * otherwise hide the very thing they are there to show. A mid neutral is
+     * the one colour that reads against both the brass and the dark slot. */
+    background:
+      repeating-linear-gradient(
+        to right,
+        rgba(124, 136, 144, 0.55) 0 1px,
+        transparent 1px var(--tick-step, 10%)
+      ),
+      linear-gradient(
+        to right,
+        var(--color-brass) var(--fill, 0%),
+        transparent var(--fill, 0%)
+      ),
+      var(--color-recess);
+    box-shadow:
+      inset 0 1px 3px rgba(0, 0, 0, 0.9),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.03);
+  }
+  .range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 22px;
+    margin-top: -6px;
+    border-radius: 3px;
+    border: 1px solid var(--color-line-bright);
+    background: linear-gradient(to bottom, #f2f5f6, #b9c2c6);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.65);
+  }
+  .range:disabled {
+    cursor: not-allowed;
+  }
+  .range:disabled::-webkit-slider-runnable-track {
+    background: var(--color-recess);
+  }
+  .range:disabled::-webkit-slider-thumb {
+    background: var(--color-panel-3);
   }
 }
 

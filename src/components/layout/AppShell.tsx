@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { InstrumentStrip } from "@/components/layout/InstrumentStrip";
+import { MeterBridge } from "@/components/layout/MeterBridge";
 import { Sidebar, type View } from "@/components/layout/Sidebar";
 import { Notice } from "@/components/ui/Notice";
 import { useT } from "@/i18n";
@@ -56,10 +56,10 @@ export function AppShell() {
       <Sidebar view={view} onNavigate={setView} snapshot={snapshot} />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <InstrumentStrip snapshot={snapshot} />
+        <MeterBridge snapshot={snapshot} />
 
         {lastActionError && (
-          <div className="border-b border-line bg-ground px-6 py-3">
+          <div className="px-6 pb-1 pt-2">
             <Notice
               tone="fault"
               title={t.app.commandFailed}
@@ -70,7 +70,7 @@ export function AppShell() {
           </div>
         )}
 
-        <main className="min-h-0 flex-1 overflow-y-auto bg-ground">
+        <main className="min-h-0 flex-1 overflow-y-auto">
           {initialising ? (
             // A brief, quiet hold. Flashing "no device detected" while the
             // first scan is still running would be a lie with a one-second

@@ -5,10 +5,10 @@ type Variant = "primary" | "secondary" | "ghost";
 
 const VARIANT: Record<Variant, string> = {
   primary:
-    "bg-brass text-ground hover:bg-brass/90 active:bg-brass-deep active:text-ink disabled:bg-brass/40",
+    "bg-brass text-ground shadow-[inset_0_1px_0_0_rgba(255,255,255,0.25),0_1px_3px_rgba(0,0,0,0.5)] hover:bg-brass/90 active:translate-y-px active:bg-brass-deep active:text-ink disabled:bg-brass/40 disabled:shadow-none",
   secondary:
-    "border border-line-bright bg-panel-2 text-ink hover:border-brass/50 hover:bg-panel-3 disabled:border-line",
-  ghost: "text-ink-dim hover:bg-panel-2 hover:text-ink",
+    "bg-panel-3 text-ink shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_1px_3px_rgba(0,0,0,0.5)] hover:bg-[#2a333a] active:translate-y-px disabled:bg-panel-2 disabled:shadow-none",
+  ghost: "text-ink-dim hover:bg-panel-3 hover:text-ink",
 };
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {

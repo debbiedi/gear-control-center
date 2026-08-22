@@ -36,7 +36,7 @@ export function OptionList({
       role="radiogroup"
       aria-label={label}
       className={cn(
-        "overflow-hidden rounded-md border border-line bg-panel-2",
+        "well overflow-hidden rounded-md",
         className,
       )}
     >

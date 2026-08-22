@@ -77,7 +77,7 @@ export function ProfilesPage({ snapshot }: { snapshot: Snapshot | null }) {
               placeholder={t.profiles.placeholder}
               disabled={!connected}
               className={cn(
-                "h-9 w-full rounded-md border border-line bg-panel-2 px-3",
+                "well h-9 w-full rounded-md px-3",
                 "text-[13.5px] text-ink placeholder:text-ink-faint",
                 "focus:border-brass focus:outline-none disabled:opacity-50",
               )}
@@ -135,7 +135,7 @@ export function ProfilesPage({ snapshot }: { snapshot: Snapshot | null }) {
                             }
                             if (e.key === "Escape") setEditing(null);
                           }}
-                          className="h-8 rounded-md border border-brass bg-panel-2 px-2.5 text-[13.5px] text-ink focus:outline-none"
+                          className="well h-8 rounded-md px-2.5 text-[13.5px] text-ink outline-2 outline-brass focus:outline-none"
                         />
                         <button
                           type="button"
