@@ -43,6 +43,7 @@ pub fn run() {
             app.state::<AppState>().chatmix.lock().reconcile();
             system::tray::create(app.handle())?;
             system::watcher::spawn(app.handle().clone());
+            system::ipc::spawn(app.handle().clone());
 
             if has_flag("--minimised") {
                 if let Some(window) = app.webview_windows().values().next() {
@@ -99,6 +100,7 @@ pub fn run() {
             // cannot be caught here, which is why every start reconciles.
             if matches!(event, tauri::RunEvent::Exit) {
                 handle.state::<AppState>().chatmix.lock().disable();
+                system::ipc::cleanup();
             }
         });
 }

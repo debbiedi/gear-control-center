@@ -142,6 +142,47 @@ limiter.
 Each of these appears in the application marked as unsupported, rather than
 being quietly missing.
 
+## From the shell
+
+`headsetctl` reads the same device layer the window does. Only one process can
+hold the headset's control interface, so it asks a running window over a local
+socket when there is one and opens the device itself when there is not — you do
+not have to know which.
+
+```console
+$ headsetctl
+SteelSeries Arctis 7+
+  Power       on
+  Battery     75%
+  ChatMix     game 100 / chat 40
+  Volume      54 / 77
+  Microphone  83 / 83
+
+$ headsetctl set sidetone 2
+$ headsetctl set mic-mute 1
+$ headsetctl --json | jq .battery_percent
+75
+```
+
+A value the device would refuse is refused here too, with the device's own
+reason and a non-zero exit status.
+
+### Waybar
+
+`headsetctl --waybar` prints exactly what a `custom` module expects:
+
+```jsonc
+"custom/headset": {
+  "exec": "headsetctl --waybar",
+  "return-type": "json",
+  "interval": 30,
+  "on-click": "headset-control-center"
+}
+```
+
+The JSON that `--json` prints is a stable contract, kept deliberately separate
+from the application's internal shape so a refactor cannot break your scripts.
+
 ## Languages
 
 The interface ships in English, Deutsch, Español, Français and Türkçe. It

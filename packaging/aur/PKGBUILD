@@ -8,6 +8,8 @@ url="https://github.com/debbiedi/headset-control-center"
 license=('MIT')
 depends=(
   'webkit2gtk-4.1'
+  # pactl, for the optional game and chat audio split
+  'libpulse'
   'gtk3'
   'libayatana-appindicator'
   'alsa-lib'
@@ -35,14 +37,17 @@ build() {
   # somewhere package() cannot find it.
   #
   # --no-bundle: the AppImage and deb bundlers are for the project's own
-  # releases. Here pacman is the package manager, so only the binary is wanted.
+  # releases. Here pacman is the package manager, so only the binaries are
+  # wanted.
   npm run tauri build -- --no-bundle
+  cargo build --release --manifest-path src-tauri/Cargo.toml --bin headsetctl
 }
 
 package() {
   cd "$pkgname-$pkgver"
 
   install -Dm755 "src-tauri/target/release/$pkgname" "$pkgdir/usr/bin/$pkgname"
+  install -Dm755 "src-tauri/target/release/headsetctl" "$pkgdir/usr/bin/headsetctl"
   install -Dm644 "packaging/$pkgname.desktop" \
     "$pkgdir/usr/share/applications/$pkgname.desktop"
 
