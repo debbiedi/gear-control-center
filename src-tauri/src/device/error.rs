@@ -13,6 +13,14 @@ pub enum DeviceError {
     #[error("This feature is not supported by your device")]
     Unsupported(&'static str),
 
+    /// The device was implemented from a written specification and nobody has
+    /// confirmed this build against the hardware yet, so it is read-only.
+    ///
+    /// Distinct from `Unsupported` on purpose: the headset can do this, we
+    /// simply will not send it a command we have never seen answered.
+    #[error("This build has not been verified against your headset, so it only reads from it")]
+    Unverified,
+
     /// The device is present but another process holds its control interface.
     #[error("The device is being controlled by another application")]
     Busy { holder: Option<String> },

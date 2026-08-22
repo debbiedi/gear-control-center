@@ -52,7 +52,9 @@ const CHATMIX_MAX: u8 = 0x64;
 /// Battery is reported as one of five discrete levels, not a percentage.
 const BATTERY_LEVELS: u8 = 5;
 
-pub fn capabilities() -> Capabilities {
+/// The 7+ reports the same way across all its product ids, so the model is
+/// not consulted. Other families in this vendor's range do vary.
+pub fn capabilities(_product_id: u16) -> Capabilities {
     Capabilities {
         // Volume and mute are USB Audio Class feature units on the dongle,
         // driven through ALSA rather than this HID channel.
@@ -170,10 +172,11 @@ pub struct Arctis7Plus {
 
 impl Arctis7Plus {
     pub fn new(transport: Box<dyn Transport>, info: DeviceInfo) -> Self {
+        let capabilities = capabilities(info.product_id);
         Self {
             transport,
             info,
-            capabilities: capabilities(),
+            capabilities,
             last_equalizer: None,
             last_preset: None,
             last_sidetone: None,
@@ -301,6 +304,7 @@ mod tests {
             hardware_revision: None,
             connection: "USB".into(),
             is_mock: false,
+            verified: true,
         };
         (Arctis7Plus::new(Box::new(fake.clone()), info), fake)
     }
@@ -547,7 +551,7 @@ mod tests {
 
     #[test]
     fn capabilities_do_not_claim_hardware_the_device_lacks() {
-        let c = capabilities();
+        let c = capabilities(PRODUCT_IDS[0]);
         assert!(!c.rgb);
         assert!(!c.firmware_update);
         assert!(!c.onboard_profiles, "the headset has no profile memory");

@@ -48,6 +48,7 @@ impl MockDevice {
                 hardware_revision: Some("A1".into()),
                 connection: "Simulated".into(),
                 is_mock: true,
+                verified: true,
             },
             capabilities: Capabilities {
                 volume: true,

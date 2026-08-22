@@ -43,6 +43,7 @@ function snapshot(capabilities: Capabilities | null): Snapshot {
           hardware_revision: null,
           connection: "USB",
           is_mock: false,
+          verified: true,
         }
       : null,
     capabilities,

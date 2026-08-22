@@ -314,6 +314,11 @@ export const tr: Catalog = {
     naExplain:
       "Yok olarak işaretlenen alanlar bu kulaklığın kontrol arayüzünde sunulmuyor. Bir ürün veritabanından doldurmak yerine boş bırakılıyorlar.",
 
+    unverifiedTitle: "Bu yapı sizin kulaklığınızda denenmedi",
+    unverifiedBody:
+      "Bu modelin desteği, iki bağımsız projenin örtüştüğü yayımlanmış belgelere göre yazıldı; ama kimse donanımda çalıştırmadı. Bu yüzden kulaklığınızdan okur, ona yazmaz: kimsenin yanıtlandığını görmediği bir komut, körlemesine gönderilecek bir komut değildir.",
+    unverifiedHelp:
+      "Bu kulaklık sizdeyse ve yukarıdaki değerler başka yerde gördüğünüzle örtüşüyorsa, bir issue açıp söyleyin; kontroller açılabilir.",
     detectedLegend: "Bulunanlar",
     detectedTitle: "Bu sistemdeki cihazlar",
     detectedDescription:
@@ -472,6 +477,8 @@ export const tr: Catalog = {
   },
 
   errors: {
+    unverified:
+      "Bu yapı kulaklığınızda doğrulanmadı, bu yüzden yalnızca okuyor.",
     unsupported: "Bu özellik cihazınız tarafından desteklenmiyor.",
     busy: "Cihazı şu anda başka bir uygulama kontrol ediyor.",
     offline: "Kulaklık kapalı.",

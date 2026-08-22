@@ -6,9 +6,29 @@
 use std::ffi::CString;
 
 use super::devices::arctis_7_plus::{self, Arctis7Plus};
+use super::devices::nova::{self, ArctisNova7};
 use super::protocol::DeviceProtocol;
 use super::transport::Transport;
 use super::types::{Capabilities, DeviceInfo, DiscoveredDevice};
+
+/// Whether this build has been run against the hardware.
+///
+/// A device added from a written specification is read-only until someone
+/// with one confirms it. Two independent documents agreeing is enough to
+/// implement a device; it is not enough to start writing to one.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Verification {
+    /// Run against the physical device.
+    Verified,
+    /// Implemented from documentation, unconfirmed.
+    Documented,
+}
+
+impl Verification {
+    pub fn is_verified(self) -> bool {
+        matches!(self, Self::Verified)
+    }
+}
 
 pub struct SupportedDevice {
     pub vendor_id: u16,
@@ -20,7 +40,8 @@ pub struct SupportedDevice {
     /// interface number because Windows does not expose interface numbers.
     pub usage_page: u16,
     pub usage: u16,
-    pub capabilities: fn() -> Capabilities,
+    pub verification: Verification,
+    pub capabilities: fn(product_id: u16) -> Capabilities,
     pub build: fn(Box<dyn Transport>, DeviceInfo) -> Box<dyn DeviceProtocol>,
 }
 
@@ -28,11 +49,24 @@ pub static SUPPORTED: &[SupportedDevice] = &[SupportedDevice {
     vendor_id: arctis_7_plus::VENDOR_ID,
     product_ids: &arctis_7_plus::PRODUCT_IDS,
     name: "SteelSeries Arctis 7+",
+    verification: Verification::Verified,
     interface: arctis_7_plus::CONTROL_INTERFACE,
     usage_page: arctis_7_plus::CONTROL_USAGE_PAGE,
     usage: arctis_7_plus::CONTROL_USAGE,
     capabilities: arctis_7_plus::capabilities,
     build: |transport, info| Box::new(Arctis7Plus::new(transport, info)),
+}, SupportedDevice {
+    vendor_id: nova::VENDOR_ID,
+    product_ids: &nova::PRODUCT_IDS,
+    name: "SteelSeries Arctis Nova 7",
+    interface: nova::CONTROL_INTERFACE,
+    usage_page: nova::CONTROL_USAGE_PAGE,
+    usage: nova::CONTROL_USAGE,
+    // Implemented from two documents that agree; nobody has run it against
+    // the hardware, so it reads and does not write.
+    verification: Verification::Documented,
+    capabilities: nova::capabilities,
+    build: |transport, info| Box::new(ArctisNova7::new(transport, info)),
 }];
 
 fn lookup(vendor_id: u16, product_id: u16) -> Option<&'static SupportedDevice> {
@@ -71,6 +105,7 @@ fn device_info(node: &hidapi::DeviceInfo, descriptor: &SupportedDevice) -> Devic
         hardware_revision: None,
         connection: "USB".to_string(),
         is_mock: false,
+        verified: descriptor.verification.is_verified(),
     }
 }
 
@@ -103,7 +138,7 @@ pub fn discover(api: &hidapi::HidApi) -> Vec<DiscoveredDevice> {
         seen_ids.push(info.id.clone());
         found.push(DiscoveredDevice {
             info,
-            capabilities: (descriptor.capabilities)(),
+            capabilities: (descriptor.capabilities)(node.product_id()),
             unavailable: (!control).then(|| {
                 format!(
                     "{} is connected, but its control interface is not available.",

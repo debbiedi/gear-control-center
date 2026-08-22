@@ -321,6 +321,11 @@ export const en = {
     naExplain:
       "Fields marked N/A are not exposed by this headset over its control interface. They are left empty rather than filled in from a product database.",
 
+    unverifiedTitle: "This build has not been checked against your headset",
+    unverifiedBody:
+      "Support for this model was written from published documentation that two independent projects agree on, but nobody has run it against the hardware. So it reads from your headset and will not write to it: a command nobody has seen answered is not one to send blind.",
+    unverifiedHelp:
+      "If you have this headset and the readings above match what it reports elsewhere, say so in an issue and the controls can be turned on.",
     detectedLegend: "Detected",
     detectedTitle: "Devices on this system",
     detectedDescription:
@@ -485,6 +490,8 @@ export const en = {
   },
 
   errors: {
+    unverified:
+      "This build has not been verified against your headset, so it only reads from it.",
     unsupported: "This feature is not supported by your device.",
     busy: "Another application is currently controlling the device.",
     offline: "The headset is turned off.",

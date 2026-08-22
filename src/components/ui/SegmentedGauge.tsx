@@ -17,6 +17,13 @@ interface SegmentedGaugeProps {
  * who watched it sit at exactly 75% for an hour would rightly stop trusting
  * the rest of the readings.
  */
+/**
+ * Beyond this many levels a device is reporting a real percentage, and drawing
+ * a hundred segments would be both unreadable and a misrepresentation of what
+ * it said. Some headsets in the same family do report percentages.
+ */
+const CONTINUOUS_ABOVE = 20;
+
 export function SegmentedGauge({
   percent,
   steps,
@@ -26,6 +33,27 @@ export function SegmentedGauge({
   const segments = Math.max(1, steps - 1);
   const filled = Math.round((percent / 100) * segments);
   const low = percent <= 25 && !charging;
+
+  if (steps > CONTINUOUS_ABOVE) {
+    return (
+      <div
+        className={cn("h-4 w-[52px] overflow-hidden rounded-[3px] border border-line-bright", className)}
+        role="meter"
+        aria-valuenow={percent}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={`Battery ${percent}%${charging ? ", charging" : ""}`}
+      >
+        <span
+          className={cn(
+            "block h-full transition-[width]",
+            charging ? "bg-live" : low ? "bg-warn" : "bg-brass",
+          )}
+          style={{ width: `${Math.max(0, Math.min(100, percent))}%` }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div

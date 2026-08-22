@@ -65,6 +65,11 @@ export interface DeviceInfo {
   hardware_revision: string | null;
   connection: string;
   is_mock: boolean;
+  /**
+   * False for a device implemented from documentation that nobody has
+   * confirmed on hardware. Such a device is read-only.
+   */
+  verified: boolean;
 }
 
 export interface BatteryState {
@@ -97,6 +102,7 @@ export interface DiscoveredDevice {
 
 export type DeviceErrorKind =
   | "unsupported"
+  | "unverified"
   | "busy"
   | "offline"
   | "not_connected"

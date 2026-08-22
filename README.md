@@ -38,9 +38,16 @@ Two consequences you can see in the first screenshot:
 
 | Device | USB ids | Status |
 | ------ | ------- | ------ |
-| SteelSeries Arctis 7+ | `1038:220e` | Fully supported, verified against hardware |
+| SteelSeries Arctis 7+ | `1038:220e` | Verified against hardware — full control |
 | Arctis 7+ PS5 / Xbox / Destiny | `1038:2212`, `2216`, `2236` | Same protocol, untested |
+| SteelSeries Arctis Nova 7 / 7X | 12 ids, `1038:2202` and others | **Read-only**: written from documentation, unconfirmed |
 | Simulated device | — | Always available, for development |
+
+A device implemented from documentation reads from your headset and will not
+write to it. Two independent projects agreeing on a protocol is enough to
+implement a headset; it is not enough to send one a command nobody has ever
+seen it answer. If you own one and the readings match what it reports
+elsewhere, say so in an issue and the controls are turned on.
 
 Other headsets are not supported yet, and will not be added on guesswork — see
 [Adding a device](#adding-a-device).
@@ -53,8 +60,8 @@ Download it from [Releases](../../releases), make it executable, run it.
 Nothing is installed.
 
 ```bash
-chmod +x headset-control-center-0.2.1-x86_64.AppImage
-./headset-control-center-0.2.1-x86_64.AppImage
+chmod +x headset-control-center-0.3.0-x86_64.AppImage
+./headset-control-center-0.3.0-x86_64.AppImage
 ```
 
 **Read this before downloading.** The published AppImage was built on Arch

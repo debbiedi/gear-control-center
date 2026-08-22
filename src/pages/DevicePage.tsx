@@ -1,6 +1,7 @@
 import { Plug, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { CapabilityTable } from "@/components/ui/CapabilityTable";
+import { Notice } from "@/components/ui/Notice";
 import { Panel } from "@/components/ui/Panel";
 import { Slider } from "@/components/ui/Slider";
 import { useT } from "@/i18n";
@@ -57,6 +58,13 @@ export function DevicePage({ snapshot }: { snapshot: Snapshot | null }) {
 
   return (
     <div className="space-y-4 p-6">
+      {device && !device.verified && (
+        <Notice tone="warn" title={t.device.unverifiedTitle}>
+          <p>{t.device.unverifiedBody}</p>
+          <p className="mt-2">{t.device.unverifiedHelp}</p>
+        </Notice>
+      )}
+
       <Panel
         legend={t.device.hardwareLegend}
         title={t.device.identityTitle}

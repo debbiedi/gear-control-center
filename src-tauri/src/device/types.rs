@@ -121,6 +121,9 @@ pub struct DeviceInfo {
     pub connection: String,
     /// True when this is the mock device, so the UI can say so plainly.
     pub is_mock: bool,
+    /// False for a device implemented from documentation that nobody has
+    /// confirmed on hardware. Such a device is read-only.
+    pub verified: bool,
 }
 
 /// Battery reading. `percent` is always one of the discrete levels the device

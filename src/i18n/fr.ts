@@ -320,6 +320,11 @@ export const fr: Catalog = {
     naExplain:
       "Les champs marqués N.D. ne sont pas exposés par ce casque sur son interface de contrôle. Ils restent vides plutôt que d'être remplis depuis une base de données produits.",
 
+    unverifiedTitle: "Cette version n'a pas été vérifiée sur votre casque",
+    unverifiedBody:
+      "La prise en charge de ce modèle a été écrite à partir de documents publiés sur lesquels deux projets indépendants s'accordent, mais personne ne l'a essayée sur le matériel. Elle lit donc votre casque et ne lui écrit pas : une commande que personne n'a vue recevoir de réponse ne s'envoie pas à l'aveugle.",
+    unverifiedHelp:
+      "Si vous avez ce casque et que les relevés ci-dessus correspondent à ce qu'il indique ailleurs, dites-le dans un ticket et les commandes pourront être activées.",
     detectedLegend: "Détectés",
     detectedTitle: "Appareils sur ce système",
     detectedDescription:
@@ -480,6 +485,8 @@ export const fr: Catalog = {
   },
 
   errors: {
+    unverified:
+      "Cette version n'a pas été vérifiée sur votre casque : elle se contente de le lire.",
     unsupported: "Votre appareil ne prend pas en charge cette fonction.",
     busy: "Une autre application pilote l'appareil en ce moment.",
     offline: "Le casque est éteint.",

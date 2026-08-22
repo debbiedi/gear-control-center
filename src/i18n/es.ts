@@ -318,6 +318,11 @@ export const es: Catalog = {
     naExplain:
       "Los campos marcados como N/D no los expone este dispositivo por su interfaz de control. Se dejan vacíos en lugar de rellenarse desde una base de datos de productos.",
 
+    unverifiedTitle: "Esta versión no se ha comprobado con sus auriculares",
+    unverifiedBody:
+      "La compatibilidad con este modelo se escribió a partir de documentación publicada en la que coinciden dos proyectos independientes, pero nadie la ha probado con el hardware. Por eso lee de sus auriculares y no les escribe: un comando que nadie ha visto responder no es un comando que se envíe a ciegas.",
+    unverifiedHelp:
+      "Si tiene estos auriculares y las lecturas de arriba coinciden con lo que indican en otro sitio, dígalo en una incidencia y se podrán activar los controles.",
     detectedLegend: "Detectados",
     detectedTitle: "Dispositivos en este sistema",
     detectedDescription:
@@ -477,6 +482,8 @@ export const es: Catalog = {
   },
 
   errors: {
+    unverified:
+      "Esta versión no se ha verificado con sus auriculares, así que solo lee de ellos.",
     unsupported: "Su dispositivo no admite esta función.",
     busy: "Otra aplicación está controlando el dispositivo ahora mismo.",
     offline: "Los auriculares están apagados.",

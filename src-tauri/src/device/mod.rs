@@ -11,6 +11,20 @@ use protocol::DeviceProtocol;
 use transport::{HidTransport, Transport};
 use types::{Capabilities, ConnectionState, DeviceInfo, DeviceState, DiscoveredDevice};
 
+/// Whether commands may be sent to a device.
+///
+/// Two independent documents agreeing is enough to implement a headset. It is
+/// not enough to send it a command nobody has ever seen it answer, so an
+/// unconfirmed device reads and does not write. Someone with one runs the
+/// probe, says what happened, and the entry is promoted.
+fn writes_allowed(verified: bool) -> DeviceResult<()> {
+    if verified {
+        Ok(())
+    } else {
+        Err(DeviceError::Unverified)
+    }
+}
+
 /// Owns every device handle in the process.
 ///
 /// Nothing above this layer touches hidapi, and nothing below it knows the UI
@@ -216,11 +230,15 @@ impl DeviceManager {
     }
 
     /// Run an operation against the open device.
+    ///
+    /// Every write to the hardware comes through here, which is where a device
+    /// nobody has confirmed is held to reading only.
     pub fn with_device<T>(
         &mut self,
         op: impl FnOnce(&mut dyn DeviceProtocol) -> DeviceResult<T>,
     ) -> DeviceResult<T> {
         let device = self.active.as_mut().ok_or(DeviceError::NotConnected)?;
+        writes_allowed(device.info().verified)?;
         op(device.as_mut())
     }
 }
@@ -288,6 +306,12 @@ mod tests {
         assert_eq!(found.len(), 1);
         assert!(found[0].info.is_mock);
         assert!(found[0].unavailable.is_none());
+    }
+
+    #[test]
+    fn an_unconfirmed_device_reads_but_does_not_write() {
+        assert!(writes_allowed(true).is_ok());
+        assert!(matches!(writes_allowed(false), Err(DeviceError::Unverified)));
     }
 
     #[test]

@@ -323,6 +323,11 @@ export const de: Catalog = {
     naExplain:
       "Mit — gekennzeichnete Felder gibt dieses Headset über seine Steuerschnittstelle nicht preis. Sie bleiben leer, statt aus einer Produktdatenbank gefüllt zu werden.",
 
+    unverifiedTitle: "Diese Fassung wurde nicht an Ihrem Headset geprüft",
+    unverifiedBody:
+      "Die Unterstützung für dieses Modell entstand aus veröffentlichten Unterlagen, in denen zwei unabhängige Projekte übereinstimmen — an der Hardware ausprobiert hat sie niemand. Deshalb liest sie von Ihrem Headset und schreibt nicht darauf: einen Befehl, den niemand je beantwortet gesehen hat, schickt man nicht blind.",
+    unverifiedHelp:
+      "Wenn Sie dieses Headset haben und die Werte oben zu dem passen, was es anderswo meldet, schreiben Sie das in ein Issue — dann können die Bedienelemente freigeschaltet werden.",
     detectedLegend: "Erkannt",
     detectedTitle: "Geräte an diesem System",
     detectedDescription:
@@ -482,6 +487,8 @@ export const de: Catalog = {
   },
 
   errors: {
+    unverified:
+      "Diese Fassung wurde nicht an Ihrem Headset geprüft und liest deshalb nur.",
     unsupported: "Diese Funktion unterstützt Ihr Gerät nicht.",
     busy: "Zurzeit steuert eine andere Anwendung das Gerät.",
     offline: "Das Headset ist ausgeschaltet.",

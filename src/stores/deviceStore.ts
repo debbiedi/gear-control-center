@@ -34,6 +34,7 @@ function describe(error: unknown, label: string): string {
     const t = useI18n.getState().t;
     const base: Record<string, string> = {
       unsupported: t.errors.unsupported,
+      unverified: t.errors.unverified,
       busy: t.errors.busy,
       offline: t.errors.offline,
       not_connected: t.errors.notConnected,

@@ -66,6 +66,18 @@ the labels follow standard ten-band spacing.
 | Smiley | `1e 1b 15 10 10 13 1b 1e 20 1f` |
 | Focus | `0e 16 11 13 20 24 1f 11 18 11` |
 
+## Adding another device — and the verification tier
+
+Every device carries a `Verification`: `Verified` means someone ran this code
+against the hardware, `Documented` means it was written from a specification
+and nobody has. The manager refuses every write to a `Documented` device, so
+such a device reads and says plainly that it is only reading.
+
+That is what makes it safe to support hardware none of us owns. The read path
+is checked against the specification with a fake transport; the write path
+waits for one person with the headset to confirm the readings, at which point
+the entry is promoted and its setters are implemented.
+
 ## Adding another device
 
 Implement `DeviceProtocol` in `src-tauri/src/device/devices/`, and add one
