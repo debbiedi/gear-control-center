@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Mic, MicOff, Volume2, VolumeX } from "lucide-react";
 import { BalanceMeter } from "@/components/ui/BalanceMeter";
 import { Button } from "@/components/ui/Button";
@@ -7,6 +8,7 @@ import { SegmentedGauge } from "@/components/ui/SegmentedGauge";
 import { Slider } from "@/components/ui/Slider";
 import { StatusLamp } from "@/components/ui/StatusLamp";
 import { StepSelector } from "@/components/ui/StepSelector";
+import { Toggle } from "@/components/ui/Toggle";
 import { term, useT } from "@/i18n";
 import { useDeviceValue } from "@/lib/useDeviceValue";
 import { deviceService } from "@/services/device";
@@ -138,6 +140,59 @@ function QuickControls({ snapshot }: { snapshot: Snapshot }) {
   );
 }
 
+/**
+ * The wheel reports two levels; on its own that is a reading and nothing more.
+ * Turning this on creates the two outputs those levels can actually act on.
+ *
+ * Off by default and never inferred: it changes the audio devices for the
+ * whole session, which is not something to do on the user's behalf.
+ */
+function ChatMixRouting({ snapshot }: { snapshot: Snapshot }) {
+  const t = useT();
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const active = snapshot.chatmixRouting;
+
+  const toggle = async (next: boolean) => {
+    setBusy(true);
+    setError(null);
+    try {
+      await deviceService.setChatmixRouting(next);
+    } catch (e) {
+      const detail = (e as { detail?: unknown })?.detail;
+      setError(typeof detail === "string" ? detail : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="space-y-3 border-t border-line pt-4">
+      <Toggle
+        checked={active}
+        onChange={(next) => void toggle(next)}
+        label={t.chatmix.splitTitle}
+        description={t.chatmix.splitDetail}
+        disabled={busy || !snapshot.device}
+        disabledReason={
+          snapshot.device ? t.chatmix.splitDetail : t.chatmix.splitDisabledReason
+        }
+      />
+      {error && (
+        <Notice tone="fault" title={t.chatmix.failedTitle} onDismiss={() => setError(null)}>
+          {error}
+        </Notice>
+      )}
+      {active && (
+        <Notice tone="info" title={t.chatmix.activeTitle}>
+          <p>{t.chatmix.activeBody}</p>
+          <p className="mt-2 text-[12.5px]">{t.chatmix.note}</p>
+        </Notice>
+      )}
+    </div>
+  );
+}
+
 export function Dashboard({ snapshot }: { snapshot: Snapshot | null }) {
   const t = useT();
   const discovered = useDeviceStore((s) => s.discovered);
@@ -231,6 +286,7 @@ export function Dashboard({ snapshot }: { snapshot: Snapshot | null }) {
               <p className="text-[12.5px] leading-snug text-ink-dim">
                 {t.dashboard.chatmixExplain}
               </p>
+              <ChatMixRouting snapshot={snapshot} />
             </div>
           ) : (
             <p className="text-[13px] text-ink-dim">

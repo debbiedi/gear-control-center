@@ -284,6 +284,18 @@ export const fr: Catalog = {
     },
   },
 
+  chatmix: {
+    splitTitle: "Séparer le son du jeu et de la discussion",
+    splitDetail:
+      "Ajoute deux sorties — Headset — Game et Headset — Chat — et mélange les deux dans le casque. La molette règle alors l'équilibre entre elles, ce à quoi elle sert.",
+    splitDisabledReason: "Connectez d'abord le casque.",
+    activeTitle: "Les sorties jeu et discussion sont en place",
+    activeBody:
+      "Affectez chaque application à Headset — Game ou Headset — Chat dans votre contrôle de volume habituel. Tourner la molette déplace l'équilibre entre elles.",
+    failedTitle: "Les sorties n'ont pas pu être créées",
+    note: "Cela modifie les périphériques audio de toute votre session, pas seulement ceux de cette application. Le désactiver les retire, quitter aussi.",
+  },
+
   device: {
     hardwareLegend: "Matériel",
     identityTitle: "Identité",

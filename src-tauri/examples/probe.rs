@@ -12,6 +12,7 @@
 //!     cargo run --example probe -- preset 1
 //!     cargo run --example probe -- eq 6 4 2 0 0 0 0 0 0 0
 
+use headset_cc_lib::audio::chatmix::ChatMixRouting;
 use headset_cc_lib::audio::AudioController;
 use headset_cc_lib::device::DeviceManager;
 use std::{thread, time::Duration};
@@ -94,6 +95,34 @@ fn main() {
                 }
                 msg
             })
+        }
+        "chatmix" => {
+            let info = manager.info().expect("connected");
+            let mut routing = ChatMixRouting::new();
+            match rest.first().map(String::as_str) {
+                Some("on") => {
+                    let outcome = routing
+                        .enable(info.vendor_id, info.product_id)
+                        .map(|_| "chatmix routing enabled".to_string());
+                    std::mem::forget(routing);
+                    outcome
+                }
+                Some("off") => {
+                    routing.reconcile();
+                    Ok("chatmix routing removed".to_string())
+                }
+                Some("mix") => {
+                    let game: u8 = rest[1].parse().expect("game");
+                    let chat: u8 = rest[2].parse().expect("chat");
+                    routing.enable(info.vendor_id, info.product_id).map(|()| {
+                        routing.apply(game, chat);
+                        // Left in place so the volumes can be inspected.
+                        std::mem::forget(routing);
+                        format!("mix -> game {game}, chat {chat}")
+                    })
+                }
+                other => Ok(format!("unknown chatmix argument: {other:?}")),
+            }
         }
         "watch" | "read" => Ok(String::new()),
         other => {

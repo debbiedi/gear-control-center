@@ -286,6 +286,18 @@ export const en = {
     },
   },
 
+  chatmix: {
+    splitTitle: "Split game and chat audio",
+    splitDetail:
+      "Adds two outputs — Headset — Game and Headset — Chat — and mixes both into the headset. The wheel then sets the balance between them, which is what it is for.",
+    splitDisabledReason: "Connect the headset first.",
+    activeTitle: "The game and chat outputs are in place",
+    activeBody:
+      "Assign each application to Headset — Game or Headset — Chat in your usual volume control. Turning the wheel changes the balance between them.",
+    failedTitle: "The outputs could not be created",
+    note: "This changes the audio devices for your whole session, not only for this application. Turning it off removes them again, and so does quitting.",
+  },
+
   device: {
     hardwareLegend: "Hardware",
     identityTitle: "Identity",

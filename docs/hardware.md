@@ -62,7 +62,7 @@ of the same model would collide.
 | ---------- | --------- | ------ |
 | Battery level | yes | **Five levels only**: 0, 25, 50, 75, 100 per cent |
 | Charging state | yes | Reported while the cable is attached |
-| ChatMix dial | yes | Read-only — the wheel is on the headset |
+| ChatMix dial | yes | Read-only — the wheel is on the headset. The application can act on the reading: see *Splitting game and chat audio* below |
 | Sidetone | yes | Four hardware steps |
 | Equaliser | yes | Ten bands, ±12 dB in 0.5 dB steps, applied by the headset |
 | Equaliser presets | yes | Four, stored in firmware |
@@ -87,6 +87,25 @@ of the same model would collide.
 3. **There is no "save to device" button.** Nothing can be saved to this
    headset. Profiles are stored by this application and applied by sending each
    setting individually, and the Profiles page says so.
+
+## Splitting game and chat audio
+
+The headset reports two levels, one per side of its wheel, but it does not
+split the audio itself — on Windows the vendor software creates two playback
+devices and attenuates them against each other. The same thing is available
+here, turned off by default: two null sinks (`headset_cc_game`,
+`headset_cc_chat`) are created and looped back into the headset's real output,
+and the wheel's reading sets their volumes. Applications are assigned to one or
+the other in the usual volume mixer.
+
+The modules are loaded through `pactl` and carry a marker in their arguments,
+so every start of the application clears any that a previous run left behind. A
+clean quit removes them; a hard kill leaves them until the next start or until
+logout, whichever comes first.
+
+The headset's playback device is found by the vendor and product ids the sound
+server publishes, not by the sink's name — names are built from the product
+string and two headsets of the same model would collide.
 
 ### What the device does not tell us
 

@@ -28,6 +28,8 @@ pub struct AppSettings {
     pub low_battery_percent: u8,
     /// Interface language: a language code, or "system" to follow the desktop.
     pub locale: String,
+    /// Keep the virtual game and chat outputs in place.
+    pub chatmix_routing: bool,
 }
 
 impl Default for AppSettings {
@@ -40,6 +42,7 @@ impl Default for AppSettings {
             low_battery_notification: true,
             low_battery_percent: 25,
             locale: "system".into(),
+            chatmix_routing: false,
         }
     }
 }

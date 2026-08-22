@@ -139,6 +139,8 @@ export interface Snapshot {
   stateError: DeviceError | null;
   audio: AudioState | null;
   audioError: DeviceError | null;
+  /** Whether the virtual game and chat outputs are currently in place. */
+  chatmixRouting: boolean;
 }
 
 export function mixerPercent(c: MixerControl): number {
@@ -230,4 +232,5 @@ export interface AppSettings {
   lowBatteryPercent: number;
   /** A language code, or "system" to follow the desktop. */
   locale: string;
+  chatmixRouting: boolean;
 }

@@ -110,7 +110,9 @@ An AUR package will follow; the publishing steps are in
 ## What it does
 
 * Battery level and charging state, at the device's own resolution
-* ChatMix dial position, live
+* ChatMix dial position, live — and, if you turn it on, two virtual outputs
+  ("Headset — Game" and "Headset — Chat") so the dial actually splits game and
+  chat audio the way it does on Windows
 * Output volume and mute — the headset's own hardware controls, so the change
   applies to every application and survives this one being closed
 * Microphone level and mute

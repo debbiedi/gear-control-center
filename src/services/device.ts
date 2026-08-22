@@ -59,4 +59,6 @@ export const deviceService = {
   /** Hand the tray and notification text to the native layer. */
   setNativeStrings: (strings: Record<string, string>) =>
     invoke<void>("set_native_strings", { strings }),
+  setChatmixRouting: (enabled: boolean) =>
+    invoke<boolean>("set_chatmix_routing", { enabled }),
 };

@@ -63,6 +63,7 @@ pub fn spawn(app: AppHandle) {
             }
 
             let snapshot = build_snapshot(&state);
+            follow_the_dial(&state, &snapshot);
 
             if snapshot.state_error.is_some() {
                 failures = failures.saturating_add(1);
@@ -85,6 +86,30 @@ pub fn spawn(app: AppHandle) {
             thread::sleep(INTERVAL);
         }
     });
+}
+
+/// Keep the virtual outputs in step with the wheel on the headset.
+///
+/// Also puts them back after a reconnect: the setting is what the user asked
+/// for, and a headset that was switched off and on again should not silently
+/// lose the split.
+fn follow_the_dial(state: &AppState, snapshot: &crate::commands::Snapshot) {
+    if !state.settings.lock().chatmix_routing {
+        return;
+    }
+    let Some(device) = snapshot.device.as_ref() else {
+        return;
+    };
+    let mut routing = state.chatmix.lock();
+    if !routing.is_active() {
+        if let Err(e) = routing.enable(device.vendor_id, device.product_id) {
+            log::warn!("chatmix routing could not be restored: {e}");
+            return;
+        }
+    }
+    if let Some(mix) = snapshot.state.as_ref().and_then(|s| s.chatmix.as_ref()) {
+        routing.apply(mix.game, mix.chat);
+    }
 }
 
 /// Warn once as the battery crosses the threshold downwards.

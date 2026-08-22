@@ -279,6 +279,18 @@ export const tr: Catalog = {
     },
   },
 
+  chatmix: {
+    splitTitle: "Oyun ve sohbet sesini ayır",
+    splitDetail:
+      "İki çıkış ekler — Headset — Game ve Headset — Chat — ve ikisini kulaklığa karıştırır. Çark da aralarındaki dengeyi ayarlar; zaten bunun için var.",
+    splitDisabledReason: "Önce kulaklığı bağlayın.",
+    activeTitle: "Oyun ve sohbet çıkışları hazır",
+    activeBody:
+      "Her uygulamayı kendi ses denetiminizden Headset — Game ya da Headset — Chat çıkışına atayın. Çarkı çevirmek aralarındaki dengeyi değiştirir.",
+    failedTitle: "Çıkışlar oluşturulamadı",
+    note: "Bu, yalnızca bu uygulamanın değil, tüm oturumunuzun ses aygıtlarını değiştirir. Kapatmak onları kaldırır; uygulamadan çıkmak da öyle.",
+  },
+
   device: {
     hardwareLegend: "Donanım",
     identityTitle: "Kimlik",

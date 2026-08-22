@@ -38,6 +38,9 @@ pub fn run() {
         )
         .manage(AppState::with_simulation(has_flag("--simulated")))
         .setup(|app| {
+            // Clear anything a previous run left in the sound server before
+            // anything else touches it.
+            app.state::<AppState>().chatmix.lock().reconcile();
             system::tray::create(app.handle())?;
             system::watcher::spawn(app.handle().clone());
 
@@ -87,7 +90,15 @@ pub fn run() {
             commands::export_diagnostics,
             commands::app_version,
             commands::set_native_strings,
+            commands::set_chatmix_routing,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running the application");
+        .build(tauri::generate_context!())
+        .expect("error while building the application")
+        .run(|handle, event| {
+            // Quitting must take the virtual outputs with it. A hard kill
+            // cannot be caught here, which is why every start reconciles.
+            if matches!(event, tauri::RunEvent::Exit) {
+                handle.state::<AppState>().chatmix.lock().disable();
+            }
+        });
 }

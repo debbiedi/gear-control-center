@@ -9,6 +9,8 @@
 //!
 //! Nothing above this module knows ALSA exists.
 
+pub mod chatmix;
+
 use alsa::mixer::{Mixer, Selem, SelemChannelId, SelemId};
 use serde::Serialize;
 

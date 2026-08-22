@@ -282,6 +282,18 @@ export const es: Catalog = {
     },
   },
 
+  chatmix: {
+    splitTitle: "Separar el audio de juego y de chat",
+    splitDetail:
+      "Añade dos salidas — Headset — Game y Headset — Chat — y mezcla ambas en los auriculares. La rueda ajusta entonces el equilibrio entre ellas, que es para lo que está.",
+    splitDisabledReason: "Conecte primero los auriculares.",
+    activeTitle: "Las salidas de juego y chat están puestas",
+    activeBody:
+      "Asigne cada aplicación a Headset — Game o Headset — Chat en su control de volumen habitual. Girar la rueda cambia el equilibrio entre ellas.",
+    failedTitle: "No se pudieron crear las salidas",
+    note: "Esto cambia los dispositivos de audio de toda su sesión, no solo los de esta aplicación. Desactivarlo los retira, y salir también.",
+  },
+
   device: {
     hardwareLegend: "Hardware",
     identityTitle: "Identidad",

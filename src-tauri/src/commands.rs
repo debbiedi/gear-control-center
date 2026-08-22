@@ -12,6 +12,10 @@ use crate::device::DeviceManager;
 
 pub struct AppState {
     pub devices: Mutex<DeviceManager>,
+    /// Virtual game and chat outputs. Owned here rather than by the device:
+    /// the applications a user has assigned to them should survive the headset
+    /// being switched off and on.
+    pub chatmix: Mutex<crate::audio::chatmix::ChatMixRouting>,
     pub settings: Mutex<crate::settings::AppSettings>,
     /// Tray and notification text, handed over by the interface.
     pub strings: Mutex<crate::system::strings::NativeStrings>,
@@ -34,6 +38,7 @@ impl AppState {
         }
         Self {
             devices: Mutex::new(manager),
+            chatmix: Mutex::new(Default::default()),
             settings: Mutex::new(crate::settings::load()),
             strings: Mutex::new(Default::default()),
         }
@@ -62,6 +67,8 @@ pub struct Snapshot {
     pub state_error: Option<DeviceError>,
     pub audio: Option<AudioState>,
     pub audio_error: Option<DeviceError>,
+    /// Whether the virtual game and chat outputs are currently in place.
+    pub chatmix_routing: bool,
 }
 
 #[tauri::command]
@@ -90,6 +97,7 @@ pub fn build_snapshot(app: &AppState) -> Snapshot {
         Some(Err(e)) => (None, Some(e)),
         None => (None, None),
     };
+    let chatmix_routing = app.chatmix.lock().is_active();
     Snapshot {
         connection: manager.connection(),
         mock_mode: manager.is_mock_mode(),
@@ -100,6 +108,7 @@ pub fn build_snapshot(app: &AppState) -> Snapshot {
         state_error,
         audio,
         audio_error,
+        chatmix_routing,
     }
 }
 
@@ -509,4 +518,27 @@ pub fn set_native_strings(
     *state.strings.lock() = strings;
     let snapshot = build_snapshot(&state);
     crate::system::tray::update(&app, &snapshot);
+}
+
+/// Put the virtual game and chat outputs in place, or take them away.
+///
+/// This is the one setting that changes the audio topology of the whole
+/// session, so it is never turned on by inference — only here, and only by
+/// someone who asked for it.
+#[tauri::command]
+pub async fn set_chatmix_routing(app: State<'_, AppState>, enabled: bool) -> DeviceResult<bool> {
+    let device = app.devices.lock().info();
+    if enabled {
+        let device = device.ok_or(DeviceError::NotConnected)?;
+        app.chatmix
+            .lock()
+            .enable(device.vendor_id, device.product_id)?;
+    } else {
+        app.chatmix.lock().disable();
+    }
+
+    let mut settings = app.settings.lock();
+    settings.chatmix_routing = enabled;
+    crate::settings::save(&settings)?;
+    Ok(enabled)
 }

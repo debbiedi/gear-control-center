@@ -50,6 +50,7 @@ function snapshot(capabilities: Capabilities | null): Snapshot {
     stateError: null,
     audio: null,
     audioError: null,
+    chatmixRouting: false,
   };
 }
 

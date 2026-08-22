@@ -287,6 +287,18 @@ export const de: Catalog = {
     },
   },
 
+  chatmix: {
+    splitTitle: "Spiel- und Chat-Ton trennen",
+    splitDetail:
+      "Legt zwei Ausgaben an — Headset — Game und Headset — Chat — und mischt beide ins Headset. Das Rad regelt dann das Verhältnis zwischen ihnen, wofür es da ist.",
+    splitDisabledReason: "Schließen Sie zuerst das Headset an.",
+    activeTitle: "Die Ausgaben für Spiel und Chat stehen",
+    activeBody:
+      "Weisen Sie jede Anwendung in Ihrer gewohnten Lautstärkeregelung Headset — Game oder Headset — Chat zu. Am Rad verschieben Sie dann das Verhältnis.",
+    failedTitle: "Die Ausgaben konnten nicht angelegt werden",
+    note: "Das ändert die Audiogeräte Ihrer gesamten Sitzung, nicht nur für diese Anwendung. Ausschalten entfernt sie wieder, Beenden ebenso.",
+  },
+
   device: {
     hardwareLegend: "Hardware",
     identityTitle: "Identität",
