@@ -224,3 +224,82 @@ impl DeviceManager {
         op(device.as_mut())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Mock mode never reaches for the HID subsystem, so these run anywhere —
+    /// including on a machine with no headset and no permission to look for
+    /// one.
+    fn simulated() -> DeviceManager {
+        let mut manager = DeviceManager::new();
+        manager.set_mock_mode(true);
+        manager
+    }
+
+    #[test]
+    fn a_device_can_be_opened_read_and_released() {
+        let mut manager = simulated();
+
+        let info = manager.connect(None).expect("the stand-in always opens");
+        assert!(info.is_mock);
+        assert_eq!(manager.connection(), ConnectionState::Connected);
+        assert!(manager.capabilities().is_some());
+        assert!(manager.state().is_ok());
+        assert!(manager.audio_state().is_some());
+
+        manager.disconnect();
+
+        assert!(manager.info().is_none());
+        assert!(manager.capabilities().is_none());
+        assert_eq!(manager.connection(), ConnectionState::Disconnected);
+        // The audio card belongs to the device; it goes with it.
+        assert!(manager.audio_state().is_none());
+    }
+
+    #[test]
+    fn state_without_a_device_is_a_reading_not_a_failure() {
+        // The interface asks for this on every refresh. An empty panel is the
+        // honest answer; an error would put a red banner over nothing wrong.
+        let mut manager = DeviceManager::new();
+        let state = manager.state().expect("no device is not an error");
+        assert!(!state.powered_on);
+        assert!(state.battery.is_none());
+    }
+
+    #[test]
+    fn changing_mode_drops_whatever_was_open() {
+        let mut manager = simulated();
+        manager.connect(None).unwrap();
+        assert!(manager.info().is_some());
+
+        // Leaving simulation must not leave the stand-in connected underneath.
+        manager.set_mock_mode(false);
+
+        assert!(manager.info().is_none());
+        assert!(!manager.is_mock_mode());
+    }
+
+    #[test]
+    fn simulated_discovery_offers_the_stand_in_and_nothing_else() {
+        let mut manager = simulated();
+        let found = manager.discover();
+        assert_eq!(found.len(), 1);
+        assert!(found[0].info.is_mock);
+        assert!(found[0].unavailable.is_none());
+    }
+
+    #[test]
+    fn a_command_without_a_device_is_refused_rather_than_ignored() {
+        let mut manager = DeviceManager::new();
+        assert!(matches!(
+            manager.with_device(|d| d.set_sidetone(1)),
+            Err(DeviceError::NotConnected)
+        ));
+        assert!(matches!(
+            manager.with_audio(|a| a.set_playback_muted(true)),
+            Err(DeviceError::NotConnected)
+        ));
+    }
+}

@@ -15,7 +15,7 @@ export default defineConfig({
   test: {
     // Pure functions only: the parts where a wrong number would reach the
     // hardware or misrepresent what it reported.
-    include: ["src/**/*.test.ts"],
+    include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
     environment: "node",
   },
   server: { port: 5173, strictPort: true },

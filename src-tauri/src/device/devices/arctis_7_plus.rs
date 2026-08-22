@@ -288,6 +288,183 @@ mod tests {
         vec![STATUS_SIGNATURE, power, battery, charging, game, chat]
     }
 
+    /// A device wired to a scripted transport, plus a handle on that script.
+    fn device() -> (Arctis7Plus, crate::device::transport::FakeTransport) {
+        let fake = crate::device::transport::FakeTransport::new();
+        let info = DeviceInfo {
+            id: "test".into(),
+            name: "SteelSeries Arctis 7+".into(),
+            vendor_id: VENDOR_ID,
+            product_id: PRODUCT_IDS[0],
+            serial: None,
+            firmware_version: None,
+            hardware_revision: None,
+            connection: "USB".into(),
+            is_mock: false,
+        };
+        (Arctis7Plus::new(Box::new(fake.clone()), info), fake)
+    }
+
+    const ON: u8 = 0x00;
+
+    #[test]
+    fn reading_state_asks_for_status_and_reads_the_answer() {
+        let (mut device, fake) = device();
+        fake.queue(&status_bytes(ON, 3, 0, 0x64, 0x64));
+
+        let state = device.read_state().unwrap();
+
+        let sent = fake.only_write();
+        assert_eq!(sent.len(), REPORT_SIZE);
+        assert_eq!(sent[0], 0x00, "byte zero is the HID report id");
+        assert_eq!(sent[1], CMD_STATUS);
+        assert_eq!(state.battery.unwrap().percent, 75);
+        let mix = state.chatmix.unwrap();
+        assert_eq!((mix.game, mix.chat), (100, 100));
+    }
+
+    #[test]
+    fn battery_is_withheld_while_the_headset_is_off() {
+        let (mut device, fake) = device();
+        // The dongle keeps answering with the last level it saw; reporting it
+        // would look like a live reading of a headset that is not even on.
+        fake.queue(&status_bytes(POWER_OFF, 3, 0, 0x64, 0x64));
+
+        let state = device.read_state().unwrap();
+
+        assert!(!state.powered_on);
+        assert!(state.battery.is_none());
+    }
+
+    #[test]
+    fn a_setting_with_no_read_back_is_reported_as_what_was_sent() {
+        let (mut device, fake) = device();
+        device.set_sidetone(2).unwrap();
+        fake.queue(&status_bytes(ON, 4, 0, 0x64, 0x64));
+
+        let state = device.read_state().unwrap();
+
+        assert_eq!(state.sidetone_level, Some(2));
+        assert_eq!(fake.writes()[0][1], CMD_SIDETONE);
+        assert_eq!(fake.writes()[0][2], 2);
+    }
+
+    #[test]
+    fn a_fresh_connection_claims_nothing_about_settings_it_did_not_send() {
+        let (mut device, fake) = device();
+        fake.queue(&status_bytes(ON, 4, 0, 0x64, 0x64));
+
+        let state = device.read_state().unwrap();
+
+        assert_eq!(state.sidetone_level, None);
+        assert_eq!(state.inactive_minutes, None);
+        assert_eq!(state.equalizer_db, None);
+        assert_eq!(state.equalizer_preset, None);
+    }
+
+    #[test]
+    fn an_out_of_range_band_is_refused_before_anything_reaches_the_device() {
+        let (mut device, fake) = device();
+
+        let refused = device.set_equalizer(&[20.0; EQ_BANDS]);
+
+        assert!(refused.is_err());
+        assert!(fake.wrote_nothing(), "a rejected value must not be sent");
+    }
+
+    #[test]
+    fn a_curve_of_the_wrong_length_is_refused_before_anything_reaches_the_device() {
+        let (mut device, fake) = device();
+        assert!(device.set_equalizer(&[0.0; 3]).is_err());
+        assert!(fake.wrote_nothing());
+    }
+
+    #[test]
+    fn a_sidetone_step_the_device_lacks_is_refused_before_anything_reaches_it() {
+        let (mut device, fake) = device();
+        assert!(device.set_sidetone(4).is_err());
+        assert!(fake.wrote_nothing());
+    }
+
+    #[test]
+    fn an_auto_shutdown_beyond_the_devices_range_is_refused() {
+        let (mut device, fake) = device();
+        assert!(device.set_inactive_time(MAX_INACTIVE_MINUTES + 1).is_err());
+        assert!(fake.wrote_nothing());
+    }
+
+    #[test]
+    fn an_unknown_preset_is_refused_before_anything_reaches_the_device() {
+        let (mut device, fake) = device();
+        assert!(device
+            .set_equalizer_preset(ARCTIS_7_PLUS_PRESETS.len() as u8)
+            .is_err());
+        assert!(fake.wrote_nothing());
+    }
+
+    #[test]
+    fn a_preset_is_also_reported_as_the_curve_it_sets() {
+        let (mut device, fake) = device();
+        device.set_equalizer_preset(1).unwrap();
+        fake.queue(&status_bytes(ON, 4, 0, 0x64, 0x64));
+
+        let state = device.read_state().unwrap();
+
+        assert_eq!(state.equalizer_preset, Some(1));
+        let curve = state.equalizer_db.expect("a preset is a curve too");
+        assert_eq!(curve.len(), EQ_BANDS);
+        assert_eq!(
+            curve,
+            EqCodec::STEELSERIES_NOVA.decode_curve(&ARCTIS_7_PLUS_PRESETS[1].bytes)
+        );
+    }
+
+    #[test]
+    fn moving_a_band_stops_claiming_a_preset_is_in_effect() {
+        let (mut device, fake) = device();
+        device.set_equalizer_preset(1).unwrap();
+        device.set_equalizer(&[1.0; EQ_BANDS]).unwrap();
+        fake.queue(&status_bytes(ON, 4, 0, 0x64, 0x64));
+
+        let state = device.read_state().unwrap();
+
+        assert_eq!(state.equalizer_preset, None);
+        assert_eq!(state.equalizer_db, Some(vec![1.0; EQ_BANDS]));
+    }
+
+    #[test]
+    fn a_failed_read_is_surfaced_rather_than_swallowed() {
+        let (mut device, fake) = device();
+        fake.queue_failure("no such device");
+
+        assert!(matches!(
+            device.read_state(),
+            Err(DeviceError::Transport(_))
+        ));
+    }
+
+    #[test]
+    fn a_device_that_says_nothing_is_an_error_not_an_empty_reading() {
+        let (mut device, _fake) = device();
+        // Nothing queued: the read returns zero bytes.
+        assert!(matches!(device.read_state(), Err(DeviceError::Protocol(_))));
+    }
+
+    #[test]
+    fn a_write_failure_leaves_no_claim_that_the_setting_was_applied() {
+        let (mut device, fake) = device();
+        fake.fail_writes("device went away");
+
+        assert!(device.set_sidetone(1).is_err());
+
+        // The device comes back; the status request needs to get through.
+        fake.allow_writes();
+        fake.queue(&status_bytes(ON, 4, 0, 0x64, 0x64));
+        // The cache is only written after a successful send, so nothing is
+        // reported back that the headset never received.
+        assert_eq!(device.read_state().unwrap().sidetone_level, None);
+    }
+
     #[test]
     fn battery_levels_map_to_the_five_values_the_device_reports() {
         for (level, expected) in [(0u8, 0u8), (1, 25), (2, 50), (3, 75), (4, 100)] {
