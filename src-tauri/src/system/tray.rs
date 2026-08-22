@@ -55,7 +55,12 @@ pub fn create(app: &AppHandle) -> tauri::Result<()> {
         .tooltip("Headset Control Center")
         .on_menu_event(|app, event| match event.id.as_ref() {
             "show" => show_window(app),
-            "quit" => app.exit(0),
+            "quit" => {
+                let handle = app.clone();
+                if let Err(e) = app.run_on_main_thread(move || handle.exit(0)) {
+                    log::warn!("could not reach the main thread to quit: {e}");
+                }
+            }
             "toggle-mute" => toggle(app, true),
             "toggle-microphone" => toggle(app, false),
             _ => {}
@@ -76,11 +81,29 @@ pub fn create(app: &AppHandle) -> tauri::Result<()> {
     Ok(())
 }
 
+/// Bring the window back.
+///
+/// Showing, unminimising and focusing are all GTK operations, and the two
+/// places that call this — the tray menu and a second launch handing over its
+/// arguments — both run on threads that are not the main loop. The menu's text
+/// was moved onto the main thread once already; these were missed, which is
+/// why the window could come back from the tray with its own title bar
+/// buttons dead.
 pub fn show_window(app: &AppHandle) {
-    if let Some(window) = app.webview_windows().values().next() {
-        let _ = window.show();
-        let _ = window.unminimize();
-        let _ = window.set_focus();
+    let handle = app.clone();
+    if let Err(e) = app.run_on_main_thread(move || {
+        if let Some(window) = handle.webview_windows().values().next() {
+            // `show()` first for the case the window really is hidden — the
+            // application starts that way with "start in the tray" on. After
+            // that it is only ever minimised, and unminimising is what brings
+            // it back with its decoration intact.
+            let _ = window.set_skip_taskbar(false);
+            let _ = window.show();
+            let _ = window.unminimize();
+            let _ = window.set_focus();
+        }
+    }) {
+        log::warn!("could not reach the main thread to show the window: {e}");
     }
 }
 

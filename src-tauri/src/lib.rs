@@ -47,7 +47,11 @@ pub fn run() {
 
             if has_flag("--minimised") {
                 if let Some(window) = app.webview_windows().values().next() {
-                    let _ = window.hide();
+                    // Minimised, not hidden, for the same reason closing is:
+                    // a surface that is destroyed and rebuilt comes back with
+                    // a decoration that no longer takes clicks. The surface
+                    // this window is given at startup is the one it keeps.
+                    let _ = window.minimize();
                 }
             }
             Ok(())
@@ -61,8 +65,20 @@ pub fn run() {
                 if close_to_tray {
                     // Keep reading the headset in the background — the tray
                     // entry is the point of the setting.
+                    //
+                    // Minimised rather than hidden: on Wayland `hide()`
+                    // destroys the toplevel surface, and the one built to
+                    // replace it comes back with a decoration the compositor
+                    // draws but no longer routes clicks to. The window looked
+                    // fine and its own close and minimise buttons did nothing.
+                    // Minimising keeps the surface, so the decoration keeps
+                    // working.
                     api.prevent_close();
-                    let _ = window.hide();
+                    // Out of the task bar as well: the tray entry is where it
+                    // lives while it is closed, and two places to click on the
+                    // same hidden window is one too many.
+                    let _ = window.set_skip_taskbar(true);
+                    let _ = window.minimize();
                 }
             }
         })
