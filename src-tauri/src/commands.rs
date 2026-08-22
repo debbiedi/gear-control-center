@@ -108,8 +108,12 @@ pub fn discover_devices(app: State<'_, AppState>) -> Vec<DiscoveredDevice> {
     app.devices.lock().discover()
 }
 
+/// Asynchronous on purpose: a synchronous command runs on the main thread, and
+/// anything that waits on the device lock there stops the window from drawing
+/// or answering its own title bar. Everything below that can touch the device
+/// follows the same rule.
 #[tauri::command]
-pub fn connect_device(
+pub async fn connect_device(
     app: State<'_, AppState>,
     device_id: Option<String>,
 ) -> DeviceResult<DeviceInfo> {
@@ -127,50 +131,50 @@ pub fn set_mock_mode(app: State<'_, AppState>, enabled: bool) {
 }
 
 #[tauri::command]
-pub fn set_sidetone(app: State<'_, AppState>, level: u8) -> DeviceResult<()> {
+pub async fn set_sidetone(app: State<'_, AppState>, level: u8) -> DeviceResult<()> {
     app.devices.lock().with_device(|d| d.set_sidetone(level))
 }
 
 #[tauri::command]
-pub fn set_inactive_time(app: State<'_, AppState>, minutes: u8) -> DeviceResult<()> {
+pub async fn set_inactive_time(app: State<'_, AppState>, minutes: u8) -> DeviceResult<()> {
     app.devices
         .lock()
         .with_device(|d| d.set_inactive_time(minutes))
 }
 
 #[tauri::command]
-pub fn set_equalizer(app: State<'_, AppState>, bands_db: Vec<f32>) -> DeviceResult<()> {
+pub async fn set_equalizer(app: State<'_, AppState>, bands_db: Vec<f32>) -> DeviceResult<()> {
     app.devices
         .lock()
         .with_device(|d| d.set_equalizer(&bands_db))
 }
 
 #[tauri::command]
-pub fn set_equalizer_preset(app: State<'_, AppState>, preset: u8) -> DeviceResult<()> {
+pub async fn set_equalizer_preset(app: State<'_, AppState>, preset: u8) -> DeviceResult<()> {
     app.devices
         .lock()
         .with_device(|d| d.set_equalizer_preset(preset))
 }
 
 #[tauri::command]
-pub fn set_volume(app: State<'_, AppState>, value: i64) -> DeviceResult<()> {
+pub async fn set_volume(app: State<'_, AppState>, value: i64) -> DeviceResult<()> {
     app.devices
         .lock()
         .with_audio(|a| a.set_playback_volume(value))
 }
 
 #[tauri::command]
-pub fn set_muted(app: State<'_, AppState>, muted: bool) -> DeviceResult<()> {
+pub async fn set_muted(app: State<'_, AppState>, muted: bool) -> DeviceResult<()> {
     app.devices.lock().with_audio(|a| a.set_playback_muted(muted))
 }
 
 #[tauri::command]
-pub fn set_microphone_volume(app: State<'_, AppState>, value: i64) -> DeviceResult<()> {
+pub async fn set_microphone_volume(app: State<'_, AppState>, value: i64) -> DeviceResult<()> {
     app.devices.lock().with_audio(|a| a.set_capture_volume(value))
 }
 
 #[tauri::command]
-pub fn set_microphone_muted(app: State<'_, AppState>, muted: bool) -> DeviceResult<()> {
+pub async fn set_microphone_muted(app: State<'_, AppState>, muted: bool) -> DeviceResult<()> {
     app.devices.lock().with_audio(|a| a.set_capture_muted(muted))
 }
 
@@ -265,7 +269,7 @@ pub fn delete_profile(id: String) -> DeviceResult<ProfileStore> {
 /// this application set them during the current session — otherwise the field
 /// is left out rather than filled with a guess.
 #[tauri::command]
-pub fn capture_profile(app: State<'_, AppState>, name: String) -> DeviceResult<ProfileStore> {
+pub async fn capture_profile(app: State<'_, AppState>, name: String) -> DeviceResult<ProfileStore> {
     let snapshot = build_snapshot(&app);
     let audio = snapshot.audio.as_ref();
     let state = snapshot.state.as_ref();
@@ -291,7 +295,7 @@ pub fn capture_profile(app: State<'_, AppState>, name: String) -> DeviceResult<P
 /// means here — and it is why the interface never offers a "save to device"
 /// button.
 #[tauri::command]
-pub fn apply_profile(app: State<'_, AppState>, id: String) -> DeviceResult<ApplyReport> {
+pub async fn apply_profile(app: State<'_, AppState>, id: String) -> DeviceResult<ApplyReport> {
     let mut store = profiles::load();
     let profile = store
         .profiles
@@ -378,7 +382,7 @@ pub fn get_settings(app: State<'_, AppState>) -> AppSettings {
 /// application: it writes a desktop entry. If that write fails the setting is
 /// reported as failed rather than saved as if it had worked.
 #[tauri::command]
-pub fn set_settings(
+pub async fn set_settings(
     app: tauri::AppHandle,
     state: State<'_, AppState>,
     settings: AppSettings,
@@ -410,7 +414,7 @@ pub fn set_settings(
 /// Returned as a path rather than dumped into the window so it can be attached
 /// to a bug report without retyping.
 #[tauri::command]
-pub fn export_diagnostics(app: State<'_, AppState>) -> DeviceResult<String> {
+pub async fn export_diagnostics(app: State<'_, AppState>) -> DeviceResult<String> {
     let snapshot = build_snapshot(&app);
     let discovered = app.devices.lock().discover();
     let settings = app.settings.lock().clone();

@@ -3,6 +3,7 @@ import { FileText } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Notice } from "@/components/ui/Notice";
 import { Panel } from "@/components/ui/Panel";
+import { OptionList } from "@/components/ui/OptionList";
 import { StepSelector } from "@/components/ui/StepSelector";
 import { Toggle } from "@/components/ui/Toggle";
 import {
@@ -11,7 +12,6 @@ import {
   useT,
   type LocalePreference,
 } from "@/i18n";
-import { cn } from "@/lib/cn";
 import { deviceService } from "@/services/device";
 import { useDeviceStore } from "@/stores/deviceStore";
 import type { AppSettings, Snapshot } from "@/types/device";
@@ -72,28 +72,22 @@ export function SettingsPage({ snapshot }: { snapshot: Snapshot | null }) {
         description={t.settings.languageDescription}
       >
         <div className="max-w-[360px] space-y-4">
-          <select
-            aria-label={t.settings.languageTitle}
+          <OptionList
+            label={t.settings.languageTitle}
             value={preference}
-            onChange={(e) =>
-              void setPreference(e.target.value as LocalePreference).then(() =>
-                setSettings((s) =>
-                  s ? { ...s, locale: e.target.value } : s,
-                ),
+            onChange={(next) =>
+              void setPreference(next as LocalePreference).then(() =>
+                setSettings((s) => (s ? { ...s, locale: next } : s)),
               )
             }
-            className={cn(
-              "h-9 w-full rounded-md border border-line bg-panel-2 px-3",
-              "text-[13.5px] text-ink focus:border-brass focus:outline-none",
-            )}
-          >
-            <option value="system">{t.settings.systemLanguage}</option>
-            {Object.entries(LOCALE_NAMES).map(([code, name]) => (
-              <option key={code} value={code}>
-                {name}
-              </option>
-            ))}
-          </select>
+            options={[
+              { value: "system", label: t.settings.systemLanguage },
+              ...Object.entries(LOCALE_NAMES).map(([code, name]) => ({
+                value: code,
+                label: name,
+              })),
+            ]}
+          />
           <p className="text-[12.5px] leading-snug text-ink-dim">
             {t.settings.languageNote}
           </p>

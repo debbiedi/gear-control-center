@@ -31,7 +31,12 @@ const REPORT_SIZE: usize = 64;
 /// Responses are read into a larger buffer than the report size, matching the
 /// reference implementations.
 const RESPONSE_BUF: usize = 128;
-const READ_TIMEOUT_MS: i32 = 2_000;
+/// The headset answers a status query in about a millisecond. This is the
+/// point at which we stop waiting for one that is not coming — and because the
+/// device lock is held for the duration, it is also the longest anything else
+/// can be kept waiting for the device. Two seconds, the previous value, was
+/// long enough to be felt as the window freezing.
+const READ_TIMEOUT_MS: i32 = 300;
 
 const CMD_STATUS: u8 = 0xb0;
 const CMD_SIDETONE: u8 = 0x39;

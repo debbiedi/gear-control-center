@@ -108,11 +108,54 @@ fn toggle(app: &AppHandle, playback: bool) {
     }
 }
 
+/// What the menu should say. Computed anywhere, applied only on the main thread.
+struct TrayView {
+    status: String,
+    battery: String,
+    mute: String,
+    mute_enabled: bool,
+    microphone: String,
+    microphone_enabled: bool,
+    open: String,
+    quit: String,
+    tooltip: String,
+}
+
 /// Rewrite the menu and tooltip from the latest reading.
+///
+/// The menu items are GTK objects and belong to the main thread. This is
+/// called from the reader thread once a second; touching them directly from
+/// there is undefined behaviour, and it intermittently wedged the GTK event
+/// loop — which is what left the window's own close and minimise buttons
+/// unresponsive. The text is built here and applied over there.
 pub fn update(app: &AppHandle, snapshot: &Snapshot) {
+    let Some(view) = describe(app, snapshot) else {
+        return;
+    };
+    let handle = app.clone();
+    if let Err(e) = app.run_on_main_thread(move || apply(&handle, view)) {
+        log::warn!("could not reach the main thread to update the tray: {e}");
+    }
+}
+
+fn apply(app: &AppHandle, view: TrayView) {
     let Some(items) = app.try_state::<TrayItems>() else {
         return;
     };
+    let _ = items.status.set_text(&view.status);
+    let _ = items.battery.set_text(&view.battery);
+    let _ = items.mute.set_text(&view.mute);
+    let _ = items.mute.set_enabled(view.mute_enabled);
+    let _ = items.microphone.set_text(&view.microphone);
+    let _ = items.microphone.set_enabled(view.microphone_enabled);
+    let _ = items.show.set_text(&view.open);
+    let _ = items.quit.set_text(&view.quit);
+    if let Some(tray) = app.tray_by_id(TRAY_ID) {
+        let _ = tray.set_tooltip(Some(&view.tooltip));
+    }
+}
+
+fn describe(app: &AppHandle, snapshot: &Snapshot) -> Option<TrayView> {
     let text = app.state::<AppState>().strings.lock().clone();
 
     let name = snapshot
@@ -120,7 +163,6 @@ pub fn update(app: &AppHandle, snapshot: &Snapshot) {
         .as_ref()
         .map(|d| d.name.clone())
         .unwrap_or_else(|| text.no_device.clone());
-    let _ = items.status.set_text(&name);
 
     let battery = match snapshot.state.as_ref().and_then(|s| s.battery.as_ref()) {
         Some(b) if b.charging => fill(&text.battery_charging, "percent", &b.percent.to_string()),
@@ -128,28 +170,29 @@ pub fn update(app: &AppHandle, snapshot: &Snapshot) {
         None if snapshot.device.is_some() => text.battery_not_reported.clone(),
         None => text.battery_unknown.clone(),
     };
-    let _ = items.battery.set_text(&battery);
 
     let playback = snapshot.audio.as_ref().and_then(|a| a.playback.as_ref());
     let capture = snapshot.audio.as_ref().and_then(|a| a.capture.as_ref());
-    let _ = items.mute.set_text(match playback {
-        Some(c) if c.muted => &text.unmute_output,
-        _ => &text.mute_output,
-    });
-    let _ = items.mute.set_enabled(playback.is_some());
-    let _ = items.microphone.set_text(match capture {
-        Some(c) if c.muted => &text.unmute_microphone,
-        _ => &text.mute_microphone,
-    });
-    let _ = items.microphone.set_enabled(capture.is_some());
-    let _ = items.show.set_text(&text.open);
-    let _ = items.quit.set_text(&text.quit);
+    let tooltip = match snapshot.state.as_ref().and_then(|s| s.battery.as_ref()) {
+        Some(b) => format!("{name} — {}%", b.percent),
+        None => name.clone(),
+    };
 
-    if let Some(tray) = app.tray_by_id(TRAY_ID) {
-        let tooltip = match snapshot.state.as_ref().and_then(|s| s.battery.as_ref()) {
-            Some(b) => format!("{name} — {}%", b.percent),
-            None => name,
-        };
-        let _ = tray.set_tooltip(Some(tooltip));
-    }
+    Some(TrayView {
+        status: name,
+        battery,
+        mute: match playback {
+            Some(c) if c.muted => text.unmute_output.clone(),
+            _ => text.mute_output.clone(),
+        },
+        mute_enabled: playback.is_some(),
+        microphone: match capture {
+            Some(c) if c.muted => text.unmute_microphone.clone(),
+            _ => text.mute_microphone.clone(),
+        },
+        microphone_enabled: capture.is_some(),
+        open: text.open.clone(),
+        quit: text.quit.clone(),
+        tooltip,
+    })
 }
