@@ -54,10 +54,11 @@ Other headsets are not supported yet, and will not be added on guesswork — see
 
 ## Install
 
-Every package below is built in a container against an older C library than
-the one on the development machine, because a binary demands the glibc it was
-linked against. The `.deb` and the AppImage are built on Ubuntu 22.04 and run
-on glibc 2.35 and newer; the `.rpm` is built on Fedora 40.
+A binary demands the glibc it was linked against, so the packages are built
+against older C libraries than the development machine's rather than on it. The
+`.deb` and the AppImage come out of an Ubuntu 22.04 container and run on glibc
+2.35 and newer; the `.rpm` out of Fedora 40. The Arch package is the exception
+and is built on Arch, where a rolling library set is the point.
 
 ### Debian, Ubuntu, Mint, Pop!_OS
 
