@@ -24,14 +24,19 @@ from a copy extracted out of a release archive, run `updpkgsums` first.
 ## Publishing to the AUR
 
 Requires an [AUR account](https://aur.archlinux.org/register) with an SSH key
-registered under **My Account → SSH Public Key**.
+registered under **My Account → SSH Public Key**. Registration is closed to new
+users at the time of writing, which is why this has not happened yet; nothing
+else is missing.
+
+`.SRCINFO` in this directory is kept current with `PKGBUILD`, so the push below
+is the whole job once an account exists.
 
 ```bash
 git clone ssh://aur@aur.archlinux.org/headset-control-center.git aur-repo
 cp PKGBUILD .SRCINFO aur-repo/
 cd aur-repo
 git add PKGBUILD .SRCINFO
-git commit -m "Initial release: 0.1.1"
+git commit -m "Initial release"
 git push
 ```
 

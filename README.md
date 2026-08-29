@@ -85,8 +85,9 @@ chmod +x headset-control-center_0.4.1_amd64.AppImage
 
 ### Arch Linux and derivatives
 
-A `PKGBUILD` lives in [`packaging/aur`](packaging/aur). It builds from the
-tagged release and installs the binary, a desktop entry and the icons:
+Build it. A `PKGBUILD` lives in [`packaging/aur`](packaging/aur); it builds from
+the tagged release and installs the binary, the `headsetctl` command, a desktop
+entry and the icons:
 
 ```bash
 git clone https://github.com/debbiedi/headset-control-center.git
@@ -101,8 +102,16 @@ later is `sudo pacman -R headset-control-center`.
 Every runtime dependency is in the official repositories — this is the
 distribution the application was developed and tested on.
 
-An AUR package will follow; the publishing steps are in
-[`packaging/aur/README.md`](packaging/aur/README.md).
+A built `.pkg.tar.zst` is attached to each release for anyone who would rather
+not compile. Take it as a convenience rather than the supported path: it links
+against the libraries that were current on the day it was built, and Arch moves
+those. `makepkg` is the answer that keeps working.
+
+The AUR package is waiting on an account — registration at
+[aur.archlinux.org](https://aur.archlinux.org/register) is closed to new users
+at the moment. The publishing steps are written up in
+[`packaging/aur/README.md`](packaging/aur/README.md) and take about a minute
+once it reopens.
 
 ### Building the packages yourself
 
