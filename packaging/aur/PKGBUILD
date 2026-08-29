@@ -1,6 +1,6 @@
 # Maintainer: Kadir Nergiz <lahgamingtr@gmail.com>
 pkgname=headset-control-center
-pkgver=0.4.0
+pkgver=0.4.1
 pkgrel=1
 pkgdesc="Desktop control panel for USB gaming headsets — shows only what the hardware actually reports"
 arch=('x86_64')
@@ -19,7 +19,7 @@ depends=(
 makedepends=('rust' 'cargo' 'nodejs' 'npm' 'pkgconf')
 options=('!lto')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('2214a31e6a7c47b3d384ff8fe08062db3edac3a25f639b406c7b5635ad2456e1')
+sha256sums=('47652b56dd62b9963f2cc9e272cf6269a4775ccab7eabe528ad89488b9b7137b')
 
 prepare() {
   cd "$pkgname-$pkgver"
