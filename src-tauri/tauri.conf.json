@@ -1,13 +1,13 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Headset Control Center",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "identifier": "dev.headsetcc.control",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173",
     "beforeDevCommand": "npm run dev",
-    "beforeBuildCommand": "npm run build"
+    "beforeBuildCommand": "npm run build && npm run build:cli"
   },
   "app": {
     "windows": [
@@ -31,7 +31,8 @@
     "active": true,
     "targets": [
       "appimage",
-      "deb"
+      "deb",
+      "rpm"
     ],
     "category": "Utility",
     "shortDescription": "Control and configure your gaming headset",
@@ -42,6 +43,18 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "linux": {
+      "deb": {
+        "files": {
+          "/usr/bin/headsetctl": "target/release/headsetctl"
+        }
+      },
+      "rpm": {
+        "files": {
+          "/usr/bin/headsetctl": "target/release/headsetctl"
+        }
+      }
+    }
   }
 }

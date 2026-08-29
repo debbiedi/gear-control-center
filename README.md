@@ -54,31 +54,34 @@ Other headsets are not supported yet, and will not be added on guesswork — see
 
 ## Install
 
-### AppImage
+Every package below is built in a container against an older C library than
+the one on the development machine, because a binary demands the glibc it was
+linked against. The `.deb` and the AppImage are built on Ubuntu 22.04 and run
+on glibc 2.35 and newer; the `.rpm` is built on Fedora 40.
 
-Download it from [Releases](../../releases), make it executable, run it.
-Nothing is installed.
+### Debian, Ubuntu, Mint, Pop!_OS
 
 ```bash
-chmod +x headset-control-center-0.4.0-x86_64.AppImage
-./headset-control-center-0.4.0-x86_64.AppImage
+sudo apt install ./headset-control-center_0.4.1_amd64.deb
 ```
 
-**Read this before downloading.** The published AppImage was built on Arch
-Linux against **glibc 2.44**, so it starts only on an equally recent
-distribution — current Arch, Fedora Rawhide and similar. On Ubuntu or Debian it
-will refuse to run with a `GLIBC_2.4x not found` error. That is not a bug you
-need to report; it is what happens when a binary meets an older C library than
-it was linked against.
+Installs the application, a desktop entry, the icons and the `headsetctl`
+command. Removing it later is `sudo apt remove headset-control-center`.
 
-Packages built on Ubuntu 22.04, which run everywhere from glibc 2.35 upwards,
-are what [the CI workflow](.github/workflows/ci.yml) produces on a tag. Until
-those appear here, Debian and Ubuntu users should build from source — it takes
-about five minutes and the instructions are below.
+### Fedora, RHEL, openSUSE
 
-### Debian, Ubuntu, and anything older
+```bash
+sudo dnf install ./headset-control-center-0.4.1-1.x86_64.rpm
+```
 
-Build from source. See below.
+### AppImage — any distribution
+
+Nothing is installed; the file is the application.
+
+```bash
+chmod +x headset-control-center_0.4.1_amd64.AppImage
+./headset-control-center_0.4.1_amd64.AppImage
+```
 
 ### Arch Linux and derivatives
 
@@ -100,6 +103,20 @@ distribution the application was developed and tested on.
 
 An AUR package will follow; the publishing steps are in
 [`packaging/aur/README.md`](packaging/aur/README.md).
+
+### Building the packages yourself
+
+The packages are produced by
+[`packaging/linux/build.sh`](packaging/linux/build.sh), which needs only Docker
+and a checkout:
+
+```bash
+./packaging/linux/build.sh          # deb, AppImage and rpm
+./packaging/linux/build.sh ubuntu   # just the deb and the AppImage
+```
+
+It copies the tracked files into a temporary tree, so it will not touch a
+`node_modules` or `target/` you are working in.
 
 ### Requirements
 
@@ -173,6 +190,10 @@ $ headsetctl --json | jq .battery_percent
 
 A value the device would refuse is refused here too, with the device's own
 reason and a non-zero exit status.
+
+It arrives with the `.deb` and the `.rpm`. The AppImage carries a copy too,
+which `--appimage-extract` will unpack to `squashfs-root/usr/bin/headsetctl`
+if you would rather not install anything.
 
 ### Waybar
 

@@ -82,6 +82,11 @@ jobs:
           NO_STRIP: "true"
           APPIMAGE_EXTRACT_AND_RUN: "1"
         with:
+          # Pinned rather than inherited from tauri.conf.json, which also lists
+          # rpm: an RPM built on Ubuntu carries Debian assumptions about
+          # package names. That one is built on Fedora, by
+          # packaging/linux/build.sh, and uploaded to the same release.
+          args: --bundles deb,appimage
           tagName: ${{ github.ref_name }}
           releaseName: "Headset Control Center ${{ github.ref_name }}"
           releaseBody: |

@@ -1,0 +1,22 @@
+# Fedora 40 (glibc 2.39) for the RPM: it covers Fedora 40 and newer, RHEL 10
+# and openSUSE Tumbleweed. Building the RPM on an older base is not worth the
+# trouble — RPM distributions move forward together, and the people who need a
+# 2.35 floor are served by the .deb and the AppImage.
+FROM fedora:40
+
+RUN dnf install -y \
+      gcc gcc-c++ make curl file \
+      webkit2gtk4.1-devel gtk3-devel librsvg2-devel \
+      libappindicator-gtk3-devel alsa-lib-devel systemd-devel openssl-devel \
+      patchelf desktop-file-utils rpm-build \
+    && dnf clean all
+
+ARG NODE_VERSION=22.14.0
+RUN curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" \
+      | tar -xJ -C /usr/local --strip-components=1
+
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+      | sh -s -- -y --default-toolchain stable --profile minimal
+ENV PATH=/root/.cargo/bin:$PATH
+
+WORKDIR /src
