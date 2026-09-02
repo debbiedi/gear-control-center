@@ -153,6 +153,9 @@ It copies the tracked files into a temporary tree, so it will not touch a
 * Sidetone, four hardware steps
 * Ten-band equaliser applied inside the headset, plus its four firmware presets
 * Auto shut-off timer
+* Those three sent again whenever the headset comes on. It does not report
+  them back, so what you set is kept here and re-sent — after a restart, a
+  power cycle, a replug — rather than assumed to have survived
 * Profiles, stored locally and applied setting by setting
 * System tray with battery and both mutes, start with the system, low battery
   warning
@@ -191,6 +194,9 @@ SteelSeries Arctis 7+
   ChatMix     game 100 / chat 40
   Volume      54 / 77
   Microphone  83 / 83
+  Sidetone    2 of 3
+  Auto-off    10 min
+  EQ preset   1
 
 $ headsetctl set sidetone 2
 $ headsetctl set mic-mute 1

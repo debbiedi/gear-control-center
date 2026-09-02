@@ -125,6 +125,18 @@ fn describe(summary: &Summary) -> String {
     if let Some(microphone) = summary.microphone.as_ref() {
         out.push_str(&field("Microphone", level(microphone)));
     }
+    // Shown only once something has been sent since the headset came on:
+    // these are not read back, and a line saying "unknown" would sit there
+    // for ever on a model that cannot be written to.
+    if let Some(level) = summary.sidetone {
+        out.push_str(&field("Sidetone", format!("{level} of 3")));
+    }
+    if let Some(minutes) = summary.inactive_minutes {
+        out.push_str(&field("Auto-off", format!("{minutes} min")));
+    }
+    if let Some(preset) = summary.equalizer_preset {
+        out.push_str(&field("EQ preset", preset.to_string()));
+    }
     if summary.chatmix_routing {
         out.push_str(&field("Routing", "game and chat outputs in place".into()));
     }

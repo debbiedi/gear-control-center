@@ -1,7 +1,8 @@
 //! Small, versioned JSON files under the user's config directory.
 //!
-//! Deliberately plain: two files, human-readable, in the place a Linux user
-//! would look for them. Nothing here is a database, and a user who edits one
+//! Deliberately plain: three files, human-readable, in the place a Linux user
+//! would look for them — preferences, profiles, and what each headset was last
+//! sent. Nothing here is a database, and a user who edits one
 //! by hand and gets it wrong loses that file's contents, not the application.
 
 use std::path::PathBuf;

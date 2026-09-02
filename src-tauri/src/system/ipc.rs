@@ -58,6 +58,12 @@ pub struct Summary {
     pub volume: Option<Level>,
     pub microphone: Option<Level>,
     pub chatmix_routing: bool,
+    /// The three the headset does not report back. What is shown is what
+    /// was sent since it came on — `None` means nothing has been, which is
+    /// the honest answer, not a zero.
+    pub sidetone: Option<u8>,
+    pub inactive_minutes: Option<u8>,
+    pub equalizer_preset: Option<u8>,
 }
 
 impl From<&Snapshot> for Summary {
@@ -83,6 +89,9 @@ impl From<&Snapshot> for Summary {
             volume: level(snapshot.audio.as_ref().and_then(|a| a.playback.as_ref())),
             microphone: level(snapshot.audio.as_ref().and_then(|a| a.capture.as_ref())),
             chatmix_routing: snapshot.chatmix_routing,
+            sidetone: state.and_then(|s| s.sidetone_level),
+            inactive_minutes: state.and_then(|s| s.inactive_minutes),
+            equalizer_preset: state.and_then(|s| s.equalizer_preset),
         }
     }
 }
@@ -208,11 +217,17 @@ mod tests {
             volume: Some(Level { value: 54, max: 77, muted: false }),
             microphone: None,
             chatmix_routing: false,
+            sidetone: Some(2),
+            inactive_minutes: None,
+            equalizer_preset: Some(1),
         };
         let text = serde_json::to_string(&summary).unwrap();
         let back: Summary = serde_json::from_str(&text).unwrap();
         assert_eq!(back.battery_percent, Some(75));
         assert_eq!(back.volume.unwrap().max, 77);
+        assert_eq!(back.sidetone, Some(2));
+        assert_eq!(back.inactive_minutes, None);
+        assert_eq!(back.equalizer_preset, Some(1));
         assert!(back.microphone.is_none());
     }
 

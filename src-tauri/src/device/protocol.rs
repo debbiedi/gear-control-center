@@ -1,5 +1,5 @@
 use super::error::{DeviceError, DeviceResult};
-use super::types::{Capabilities, DeviceInfo, DeviceState};
+use super::types::{Capabilities, DeviceInfo, DeviceState, Sent};
 
 /// The single interface every device implementation exposes upward.
 ///
@@ -13,6 +13,13 @@ pub trait DeviceProtocol: Send {
 
     /// Read everything the device will currently tell us.
     fn read_state(&mut self) -> DeviceResult<DeviceState>;
+
+    /// What this handle has sent that the device will not report back, so
+    /// the manager can send it again after a reconnect. A device that is
+    /// read-only, or that reports everything, has nothing to say here.
+    fn sent(&self) -> Sent {
+        Sent::default()
+    }
 
     fn set_sidetone(&mut self, _level: u8) -> DeviceResult<()> {
         Err(DeviceError::Unsupported("sidetone"))

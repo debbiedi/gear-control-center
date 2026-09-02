@@ -156,6 +156,27 @@ pub struct DeviceState {
     pub equalizer_preset: Option<u8>,
 }
 
+/// What has been sent to a device that it will not report back.
+///
+/// Sidetone, the auto shut-off timer and the equaliser have no read command
+/// on any supported headset. The only record of them is the record of what
+/// was sent — so that is what is kept, and sent again when the headset comes
+/// back, rather than assumed to have survived the power cycle.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct Sent {
+    pub sidetone: Option<u8>,
+    pub inactive_minutes: Option<u8>,
+    pub equalizer_db: Option<Vec<f32>>,
+    pub equalizer_preset: Option<u8>,
+}
+
+impl Sent {
+    pub fn is_empty(&self) -> bool {
+        *self == Self::default()
+    }
+}
+
 impl DeviceState {
     pub fn disconnected() -> Self {
         Self {

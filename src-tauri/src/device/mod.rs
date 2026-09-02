@@ -1,12 +1,14 @@
 pub mod devices;
 pub mod discovery;
 pub mod error;
+pub mod memory;
 pub mod protocol;
 pub mod transport;
 pub mod types;
 
 use crate::audio::{AudioBackend, AudioState};
 use error::{DeviceError, DeviceResult};
+use memory::Memory;
 use protocol::DeviceProtocol;
 use transport::{HidTransport, Transport};
 use types::{Capabilities, ConnectionState, DeviceInfo, DeviceState, DiscoveredDevice};
@@ -42,6 +44,9 @@ pub struct DeviceManager {
     audio: Option<AudioBackend>,
     connection: ConnectionState,
     use_mock: bool,
+    /// What each headset was last sent, so it can be sent again. Every write
+    /// records into it; `restore` reads it back out.
+    memory: Memory,
 }
 
 impl Default for DeviceManager {
@@ -66,6 +71,7 @@ impl DeviceManager {
             audio: None,
             connection: ConnectionState::Disconnected,
             use_mock: false,
+            memory: Memory::on_disk(),
         }
     }
 
@@ -237,9 +243,83 @@ impl DeviceManager {
         &mut self,
         op: impl FnOnce(&mut dyn DeviceProtocol) -> DeviceResult<T>,
     ) -> DeviceResult<T> {
+        let result = self.write(op)?;
+        self.remember();
+        Ok(result)
+    }
+
+    fn write<T>(
+        &mut self,
+        op: impl FnOnce(&mut dyn DeviceProtocol) -> DeviceResult<T>,
+    ) -> DeviceResult<T> {
         let device = self.active.as_mut().ok_or(DeviceError::NotConnected)?;
         writes_allowed(device.info().verified)?;
         op(device.as_mut())
+    }
+
+    /// Keep what the open device has been sent.
+    ///
+    /// Runs after every write that succeeded, so the record can never contain
+    /// a value the device refused. The stand-in is left out: it would leave a
+    /// fake entry in a real user's file.
+    fn remember(&mut self) {
+        let Some(device) = self.active.as_ref() else {
+            return;
+        };
+        let info = device.info().clone();
+        if info.is_mock {
+            return;
+        }
+        let sent = device.sent();
+        if let Err(e) = self.memory.record(&info, sent) {
+            log::warn!("could not keep the settings of {}: {e}", info.name);
+        }
+    }
+
+    /// Send the open device what it was last sent.
+    ///
+    /// The watcher calls this when the headset comes on — at start, after its
+    /// own power cycle, after the dongle is plugged back in. On the power-on
+    /// edge rather than on connect, because a write to a headset that is
+    /// switched off reaches the dongle and nothing else. Nothing is assumed
+    /// to have survived: it is sent, and only then reported as the state.
+    pub fn restore(&mut self) {
+        let Some(device) = self.active.as_ref() else {
+            return;
+        };
+        let info = device.info().clone();
+        if info.is_mock {
+            return;
+        }
+        let Some(sent) = self.memory.recall(&info).cloned() else {
+            return;
+        };
+        if sent.is_empty() {
+            return;
+        }
+
+        let mut done: Vec<&str> = Vec::new();
+        let mut note = |label: &'static str, outcome: DeviceResult<()>| match outcome {
+            Ok(()) => done.push(label),
+            Err(e) => log::warn!("could not restore {label} on {}: {e}", info.name),
+        };
+        if let Some(level) = sent.sidetone {
+            note("sidetone", self.write(|d| d.set_sidetone(level)));
+        }
+        if let Some(minutes) = sent.inactive_minutes {
+            note("auto shut-off", self.write(|d| d.set_inactive_time(minutes)));
+        }
+        // A preset is recorded beside the curve it decodes to and cleared when
+        // a custom curve follows it, so a preset still present is the more
+        // recent choice of the two.
+        if let Some(preset) = sent.equalizer_preset {
+            note("equaliser preset", self.write(|d| d.set_equalizer_preset(preset)));
+        } else if let Some(bands) = sent.equalizer_db.as_deref() {
+            note("equaliser", self.write(|d| d.set_equalizer(bands)));
+        }
+        if !done.is_empty() {
+            log::info!("restored {} on {}", done.join(", "), info.name);
+        }
     }
 }
 
@@ -312,6 +392,110 @@ mod tests {
     fn an_unconfirmed_device_reads_but_does_not_write() {
         assert!(writes_allowed(true).is_ok());
         assert!(matches!(writes_allowed(false), Err(DeviceError::Unverified)));
+    }
+
+    use devices::arctis_7_plus::{
+        Arctis7Plus, CMD_EQUALIZER, CMD_INACTIVE_TIME, CMD_SIDETONE, PRODUCT_IDS, VENDOR_ID,
+    };
+    use transport::FakeTransport;
+
+    fn arctis_info() -> DeviceInfo {
+        DeviceInfo {
+            id: "test-arctis".into(),
+            name: "SteelSeries Arctis 7+".into(),
+            vendor_id: VENDOR_ID,
+            product_id: PRODUCT_IDS[0],
+            serial: None,
+            firmware_version: None,
+            hardware_revision: None,
+            connection: "USB".into(),
+            is_mock: false,
+            verified: true,
+        }
+    }
+
+    /// A manager holding a fake-backed Arctis, remembering only in memory.
+    fn holding(fake: &FakeTransport, memory: Memory) -> DeviceManager {
+        let mut manager = DeviceManager::new();
+        manager.memory = memory;
+        manager.active = Some(Box::new(Arctis7Plus::new(
+            Box::new(fake.clone()),
+            arctis_info(),
+        )));
+        manager.connection = ConnectionState::Connected;
+        manager
+    }
+
+    #[test]
+    fn what_was_sent_is_sent_again_to_the_next_handle() {
+        // The first handle: the user sets three things during a session.
+        let first = FakeTransport::new();
+        let mut before = holding(&first, Memory::in_memory());
+        before.with_device(|d| d.set_sidetone(2)).unwrap();
+        before.with_device(|d| d.set_inactive_time(10)).unwrap();
+        before.with_device(|d| d.set_equalizer_preset(1)).unwrap();
+        let kept = before.memory.clone();
+
+        // The next handle — after a restart, a power cycle, a replug — knows
+        // nothing until it is told.
+        let second = FakeTransport::new();
+        let mut after = holding(&second, kept);
+        assert!(after.active.as_ref().unwrap().sent().is_empty());
+
+        after.restore();
+
+        let writes = second.writes();
+        assert_eq!(writes.len(), 3, "one command per remembered setting");
+        assert_eq!((writes[0][1], writes[0][2]), (CMD_SIDETONE, 2));
+        assert_eq!((writes[1][1], writes[1][2]), (CMD_INACTIVE_TIME, 10));
+        assert_eq!(writes[2][1], CMD_EQUALIZER);
+        // And only now is it reported — as what was sent, not as an assumption.
+        let sent = after.active.as_ref().unwrap().sent();
+        assert_eq!(sent.sidetone, Some(2));
+        assert_eq!(sent.equalizer_preset, Some(1));
+    }
+
+    #[test]
+    fn a_custom_curve_that_followed_a_preset_is_what_comes_back() {
+        let first = FakeTransport::new();
+        let mut before = holding(&first, Memory::in_memory());
+        before.with_device(|d| d.set_equalizer_preset(1)).unwrap();
+        let curve = [2.5; devices::arctis_7_plus::EQ_BANDS];
+        before.with_device(|d| d.set_equalizer(&curve)).unwrap();
+
+        let second = FakeTransport::new();
+        let mut after = holding(&second, before.memory.clone());
+        after.restore();
+
+        assert_eq!(second.writes().len(), 1, "the curve, not the preset it replaced");
+        assert_eq!(after.active.as_ref().unwrap().sent().equalizer_db.as_deref(), Some(&curve[..]));
+    }
+
+    #[test]
+    fn a_device_with_nothing_kept_is_not_written_to() {
+        let fake = FakeTransport::new();
+        let mut manager = holding(&fake, Memory::in_memory());
+        manager.restore();
+        assert!(fake.wrote_nothing());
+    }
+
+    #[test]
+    fn a_write_the_device_refused_is_not_remembered() {
+        let fake = FakeTransport::new();
+        fake.fail_writes("unplugged");
+        let mut manager = holding(&fake, Memory::in_memory());
+        assert!(manager.with_device(|d| d.set_sidetone(2)).is_err());
+        assert!(manager.memory.recall(&arctis_info()).is_none());
+    }
+
+    #[test]
+    fn the_stand_in_leaves_no_record() {
+        let mut manager = simulated();
+        manager.memory = Memory::in_memory();
+        let info = manager.connect(None).unwrap();
+        manager.with_device(|d| d.set_sidetone(1)).unwrap();
+        assert!(manager.memory.recall(&info).is_none());
+        manager.restore();
     }
 
     #[test]

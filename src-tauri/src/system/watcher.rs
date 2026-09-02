@@ -37,6 +37,7 @@ pub fn spawn(app: AppHandle) {
     thread::spawn(move || {
         let mut last_percent: Option<u8> = None;
         let mut failures: u8 = 0;
+        let mut was_on = false;
         loop {
         {
             let state = app.state::<AppState>();
@@ -64,6 +65,16 @@ pub fn spawn(app: AppHandle) {
 
             let snapshot = build_snapshot(&state);
             follow_the_dial(&state, &snapshot);
+
+            // The headset coming on — at start, after a power cycle, after the
+            // dongle is plugged back in — is when it has to be told its
+            // settings again. The three it does not report back would
+            // otherwise read "unknown" here and sit at its own defaults there.
+            let on_now = snapshot.state.as_ref().is_some_and(|s| s.powered_on);
+            if on_now && !was_on {
+                state.devices.lock().restore();
+            }
+            was_on = on_now;
 
             if snapshot.state_error.is_some() {
                 failures = failures.saturating_add(1);

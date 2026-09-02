@@ -39,14 +39,14 @@ const RESPONSE_BUF: usize = 128;
 const READ_TIMEOUT_MS: i32 = 300;
 
 const CMD_STATUS: u8 = 0xb0;
-const CMD_SIDETONE: u8 = 0x39;
-const CMD_INACTIVE_TIME: u8 = 0xa3;
-const CMD_EQUALIZER: u8 = 0x33;
+pub(crate) const CMD_SIDETONE: u8 = 0x39;
+pub(crate) const CMD_INACTIVE_TIME: u8 = 0xa3;
+pub(crate) const CMD_EQUALIZER: u8 = 0x33;
 
 const STATUS_SIGNATURE: u8 = 0xb0;
 const POWER_OFF: u8 = 0x01;
 const MAX_INACTIVE_MINUTES: u8 = 90;
-const EQ_BANDS: usize = 10;
+pub(crate) const EQ_BANDS: usize = 10;
 const CHATMIX_MAX: u8 = 0x64;
 
 /// Battery is reported as one of five discrete levels, not a percentage.
@@ -162,8 +162,9 @@ pub struct Arctis7Plus {
     info: DeviceInfo,
     capabilities: Capabilities,
     /// Last curve we sent. The device has no read-back command, so this is our
-    /// only record of what it is playing — and it is dropped on reconnect
-    /// rather than assumed to have survived.
+    /// only record of what it is playing. It dies with this handle rather
+    /// than being assumed to have survived a reconnect; the manager keeps a
+    /// copy and sends it again — see `DeviceManager::restore`.
     last_equalizer: Option<Vec<f32>>,
     last_preset: Option<u8>,
     last_sidetone: Option<u8>,
@@ -232,6 +233,15 @@ impl DeviceProtocol for Arctis7Plus {
             equalizer_db: self.last_equalizer.clone(),
             equalizer_preset: self.last_preset,
         })
+    }
+
+    fn sent(&self) -> Sent {
+        Sent {
+            sidetone: self.last_sidetone,
+            inactive_minutes: self.last_inactive,
+            equalizer_db: self.last_equalizer.clone(),
+            equalizer_preset: self.last_preset,
+        }
     }
 
     fn set_sidetone(&mut self, level: u8) -> DeviceResult<()> {
@@ -338,6 +348,26 @@ mod tests {
 
         assert!(!state.powered_on);
         assert!(state.battery.is_none());
+    }
+
+    #[test]
+    fn what_was_sent_is_handed_back_for_sending_again() {
+        let (mut device, _fake) = device();
+        assert!(device.sent().is_empty(), "a fresh handle has sent nothing");
+
+        device.set_sidetone(2).unwrap();
+        device.set_inactive_time(10).unwrap();
+        device.set_equalizer_preset(1).unwrap();
+
+        let sent = device.sent();
+        assert_eq!(sent.sidetone, Some(2));
+        assert_eq!(sent.inactive_minutes, Some(10));
+        assert_eq!(sent.equalizer_preset, Some(1));
+        assert!(sent.equalizer_db.is_some(), "a preset is a curve too");
+
+        // A custom curve after a preset means the curve is what is playing.
+        device.set_equalizer(&[1.0; EQ_BANDS]).unwrap();
+        assert_eq!(device.sent().equalizer_preset, None);
     }
 
     #[test]
