@@ -15,6 +15,8 @@ interface DeviceStore {
   refresh: () => Promise<void>;
   scan: () => Promise<void>;
   connect: (deviceId?: string) => Promise<void>;
+  /** Point the window at another open device. */
+  selectDevice: (deviceId: string) => Promise<void>;
   disconnect: () => Promise<void>;
   setMockMode: (enabled: boolean) => Promise<void>;
   run: (label: string, action: () => Promise<void>) => Promise<void>;
@@ -127,6 +129,29 @@ export const useDeviceStore = create<DeviceStore>((set, get) => ({
         lastActionError: describe(
           error,
           useI18n.getState().t.actions.connecting,
+        ),
+      });
+    }
+    await get().refresh();
+  },
+
+  /**
+   * Switch device.
+   *
+   * The native layer keeps every device open, so this opens nothing and
+   * closes nothing — it moves which one commands are aimed at. The snapshot is
+   * re-read straight away so the window does not spend a beat showing the
+   * previous device's readings under the new device's name.
+   */
+  selectDevice: async (deviceId) => {
+    try {
+      await deviceService.connect(deviceId);
+      set({ lastActionError: null });
+    } catch (error) {
+      set({
+        lastActionError: describe(
+          error,
+          useI18n.getState().t.actions.switchingDevice,
         ),
       });
     }

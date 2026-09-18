@@ -38,6 +38,50 @@ pub trait DeviceProtocol: Send {
         Err(DeviceError::Unsupported("equalizer_preset"))
     }
 
+    /// Set the resolutions the device cycles through, and which is selected.
+    ///
+    /// One command, not one per preset: the device replaces the whole list at
+    /// once, so sending them separately would leave it briefly holding a list
+    /// nobody asked for.
+    fn set_dpi_presets(&mut self, _dpis: &[u32], _active: u8) -> DeviceResult<()> {
+        Err(DeviceError::Unsupported("dpi"))
+    }
+
+    fn set_polling_rate(&mut self, _hz: u16) -> DeviceResult<()> {
+        Err(DeviceError::Unsupported("polling_rate"))
+    }
+
+    /// Light one zone a fixed colour. Zones are indexed as
+    /// [`crate::device::types::LightingSupport::zones`] names them.
+    fn set_lighting_color(&mut self, _zone: u8, _rgb: [u8; 3]) -> DeviceResult<()> {
+        Err(DeviceError::Unsupported("lighting"))
+    }
+
+    /// Run one of the device's own effects, indexed as
+    /// [`crate::device::types::LightingSupport::effects`] lists them.
+    fn set_lighting_effect(&mut self, _effect: u8) -> DeviceResult<()> {
+        Err(DeviceError::Unsupported("lighting_effect"))
+    }
+
+    /// Flash a colour on a button press, or `None` to stop.
+    fn set_reactive_color(&mut self, _rgb: Option<[u8; 3]>) -> DeviceResult<()> {
+        Err(DeviceError::Unsupported("reactive_color"))
+    }
+
+    /// Idle seconds before the lighting dims. 0 disables dimming.
+    fn set_dim_timer(&mut self, _seconds: u16) -> DeviceResult<()> {
+        Err(DeviceError::Unsupported("dim_timer"))
+    }
+
+    /// Commit the current settings to the device's own memory.
+    ///
+    /// Offered as its own command rather than run after every write: this puts
+    /// the settings in flash, and a slider that saved on each drag would write
+    /// to it a hundred times to move one number.
+    fn save_to_device(&mut self) -> DeviceResult<()> {
+        Err(DeviceError::Unsupported("onboard_memory"))
+    }
+
     /// Release the underlying handle. Called on unplug and on app exit.
     fn disconnect(&mut self) -> DeviceResult<()> {
         Ok(())

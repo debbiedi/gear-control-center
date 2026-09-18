@@ -95,6 +95,11 @@ pub fn capabilities(_product_id: u16) -> Capabilities {
         inactive_time: Some(InactiveTimeSupport {
             max_minutes: MAX_INACTIVE_MINUTES,
         }),
+        // A headset has no sensor and no lighting.
+        dpi: None,
+        polling_rate: None,
+        lighting: None,
+        onboard_memory: false,
     }
 }
 
@@ -232,6 +237,10 @@ impl DeviceProtocol for Arctis7Plus {
             inactive_minutes: self.last_inactive,
             equalizer_db: self.last_equalizer.clone(),
             equalizer_preset: self.last_preset,
+            dpi_presets: None,
+            dpi_active: None,
+            polling_rate: None,
+            lighting: None,
         })
     }
 
@@ -241,6 +250,10 @@ impl DeviceProtocol for Arctis7Plus {
             inactive_minutes: self.last_inactive,
             equalizer_db: self.last_equalizer.clone(),
             equalizer_preset: self.last_preset,
+            dpi_presets: None,
+            dpi_active: None,
+            polling_rate: None,
+            lighting: None,
         }
     }
 

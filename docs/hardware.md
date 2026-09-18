@@ -23,6 +23,26 @@ Related product ids share the protocol and are listed as supported, but have
 not been tested here: `2212` (PS5), `2216` (Xbox), `2236` (Destiny edition).
 `[unverified]`
 
+## SteelSeries Aerox 3 Wireless
+
+Wireless mouse with a USB-C receiver. `1038:1838` over the radio and
+`1038:183a` on the cable — the same mouse, two products, and it swaps between
+them when it is plugged in to charge. The receiver presents five interfaces:
+
+| # | Class | Purpose | Kernel driver | Node |
+| - | ----- | ------- | ------------- | ---- |
+| 0 | HID, generic desktop, usage `0x2` | Mouse | `usbhid` | `/dev/hidraw0` |
+| 1 | HID, generic desktop, usage `0x6` | Keyboard (button mapping) | `usbhid` | `/dev/hidraw1` |
+| 2 | HID, consumer page `0x0c` | Media keys | `usbhid` | `/dev/hidraw2` |
+| 3 | HID, usage page `0xffc0`, usage `0x1` | **Control channel** | `usbhid` | `/dev/hidraw3` |
+| 4 | HID, vendor page `0xffc1` | Purpose unknown `[unverified]` | `usbhid` | `/dev/hidraw4` |
+
+Interface 3 carries control traffic, exactly as on the headset and behind the
+same usage page. The two are told apart by product id alone.
+
+Unlike the headset, reports on this interface are not padded to a fixed size.
+Battery is the only thing it will report; everything else is write-only.
+
 ## Permissions
 
 No new udev rule is needed on a current distribution. Arch ships
@@ -33,6 +53,8 @@ If your distribution does not, add:
 
 ```
 SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1038", ATTRS{idProduct}=="220e", TAG+="uaccess"
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1038", ATTRS{idProduct}=="1838", TAG+="uaccess"
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1038", ATTRS{idProduct}=="183a", TAG+="uaccess"
 ```
 
 to `/etc/udev/rules.d/70-headset-control-center.rules` and reload with

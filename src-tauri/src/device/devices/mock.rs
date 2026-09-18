@@ -84,6 +84,11 @@ impl MockDevice {
                         .collect(),
                 }),
                 inactive_time: Some(InactiveTimeSupport { max_minutes: 90 }),
+                // The stand-in stands in for a headset.
+                dpi: None,
+                polling_rate: None,
+                lighting: None,
+                onboard_memory: false,
             },
             started: Instant::now(),
             powered_on: true,
@@ -139,6 +144,10 @@ impl DeviceProtocol for MockDevice {
             inactive_minutes: Some(self.inactive),
             equalizer_db: Some(self.equalizer.clone()),
             equalizer_preset: self.preset,
+            dpi_presets: None,
+            dpi_active: None,
+            polling_rate: None,
+            lighting: None,
         })
     }
 

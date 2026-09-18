@@ -7,8 +7,10 @@ import { AudioPage } from "@/pages/AudioPage";
 import { Dashboard } from "@/pages/Dashboard";
 import { DevicePage } from "@/pages/DevicePage";
 import { EqualizerPage } from "@/pages/EqualizerPage";
+import { LightingPage } from "@/pages/LightingPage";
 import { MicrophonePage } from "@/pages/MicrophonePage";
 import { ProfilesPage } from "@/pages/ProfilesPage";
+import { SensorPage } from "@/pages/SensorPage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { useDeviceStore } from "@/stores/deviceStore";
 
@@ -17,6 +19,8 @@ const PAGES: Record<View, (p: { snapshot: ReturnType<typeof useSnapshot> }) => R
   audio: AudioPage,
   microphone: MicrophonePage,
   equalizer: EqualizerPage,
+  sensor: SensorPage,
+  lighting: LightingPage,
   profiles: ProfilesPage,
   device: DevicePage,
   settings: SettingsPage,
@@ -35,8 +39,9 @@ export function AppShell() {
   const clearActionError = useDeviceStore((s) => s.clearActionError);
   const capabilities = snapshot?.capabilities ?? null;
 
-  // A section can disappear when the device changes — a headset without an
-  // equaliser should not leave the window sitting on an equaliser page.
+  // A section can disappear when the device changes — switching from the mouse
+  // to the headset should not leave the window sitting on a sensor page, and
+  // the same held before there was a mouse to switch to.
   useEffect(() => {
     if (!capabilities) return;
     const gone =
@@ -45,7 +50,12 @@ export function AppShell() {
       (view === "microphone" &&
         !capabilities.microphone_volume &&
         !capabilities.microphone_mute &&
-        !capabilities.sidetone);
+        !capabilities.sidetone) ||
+      (view === "sensor" &&
+        capabilities.dpi === null &&
+        capabilities.polling_rate === null) ||
+      (view === "lighting" && capabilities.lighting === null) ||
+      (view === "profiles" && !capabilities.software_profiles);
     if (gone) setView("dashboard");
   }, [capabilities, view]);
 

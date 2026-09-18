@@ -22,6 +22,8 @@ export const de: Catalog = {
   },
 
   nav: {
+    sensor: "Sensor",
+    lighting: "Beleuchtung",
     dashboard: "Übersicht",
     audio: "Audio",
     microphone: "Mikrofon",
@@ -424,8 +426,8 @@ export const de: Catalog = {
 
   capabilities: {
     batteryLevel: "Akkustand",
-    batteryLevelDetail: (steps: number) =>
-      `${steps} diskrete Stufen (0 / 25 / 50 / 75 / 100 %)`,
+    batteryLevelDetail: (steps: number, apart: number) =>
+      `${steps} einzelne Stufen, ${apart}% auseinander`,
     batteryLevelAbsent: "Von diesem Gerät nicht gemeldet",
     chargingState: "Ladezustand",
     chargingStateDetail: "Wird gemeldet, solange das Kabel angeschlossen ist",
@@ -464,6 +466,19 @@ export const de: Catalog = {
       "Das Headset kann keine Profile speichern, es gibt also nichts, was sich darauf sichern ließe",
     firmware: "Firmware-Aktualisierung",
     firmwareAbsent: "Für dieses Gerät ist kein Aktualisierungsweg dokumentiert",
+    dpi: "Sensorauflösung",
+    dpiDetail: (count: number, min: number, max: number) =>
+      `${count} Stufen, ${min}-${max} CPI`,
+    dpiAbsent: "Dieses Gerät hat keinen Sensor",
+    pollingRate: "Abtastrate",
+    pollingRateDetail: (rates: string) => `${rates}`,
+    pollingRateAbsent: "An diesem Gerät nicht einstellbar",
+    lightingZones: "Beleuchtungszonen",
+    lightingZonesDetail: (zones: string) => zones,
+    lightingZonesAbsent: "Keine adressierbaren Zonen",
+    onboardMemory: "Gerätespeicher",
+    onboardMemoryDetail: "Einstellungen lassen sich im Gerät selbst ablegen",
+    onboardMemoryAbsent: "Das Gerät speichert nichts von sich aus",
     rgb: "RGB-Beleuchtung",
     rgbAbsent: "Dieses Headset hat keine ansteuerbare Beleuchtung",
     spatial: "Raumklang",
@@ -475,7 +490,63 @@ export const de: Catalog = {
     notAvailable: "Nicht verfügbar",
   },
 
+  devices: {
+    title: "Geräte",
+    readOnly: "Nur lesend",
+    off: "Aus",
+    noReading: "Kein Messwert",
+  },
+
+  sensor: {
+    title: "Sensor",
+    lede: "Die Auflösungen, die diese Maus durchschaltet, und wie oft sie meldet.",
+    presets: "Auflösungsstufen",
+    presetsHint: (max: number) =>
+      `Bis zu ${max}. Die Taste unter der Maus schaltet der Reihe nach durch.`,
+    preset: (n: number) => `Stufe ${n}`,
+    selected: "Ausgewählt",
+    select: "Diese Stufe auswählen",
+    add: "Stufe hinzufügen",
+    remove: "Entfernen",
+    cpi: "CPI",
+    snapped: (cpi: number) => `Nächster Sensorwert: ${cpi} CPI`,
+    reportRate: "Abtastrate",
+    reportRateHint:
+      "Wie oft die Maus ihre Position meldet. Höher kostet Akkulaufzeit.",
+    hz: (n: number) => `${n} Hz`,
+    sleepTimer: "Ruhezeit",
+    sleepTimerHint: (max: number) =>
+      `Minuten im Leerlauf, bis sich die Maus abschaltet. Bis zu ${max}.`,
+    never: "Nie",
+    minutes: (n: number) => `${n} Min.`,
+    save: "In der Maus speichern",
+    saveHint:
+      "Diese Werte werden erneut gesendet, sobald die Maus aufwacht. Das Speichern schreibt sie zusätzlich in den Speicher der Maus, sodass sie auch ohne diese Anwendung erhalten bleiben.",
+    saved: "Im Gerät gespeichert",
+    absent: "Das ausgewählte Gerät hat keinen einstellbaren Sensor.",
+  },
+
+  lighting: {
+    title: "Beleuchtung",
+    lede: "Drei LEDs entlang des Mausgehäuses.",
+    effect: "Effekt",
+    effectHint:
+      "Eine Farbe zu setzen beendet den Regenbogen — das Gerät kennt dafür keinen eigenen Befehl.",
+    zones: "Zonenfarben",
+    reactive: "Bei Klick aufleuchten",
+    reactiveHint: "Eine Farbe, die bei jedem Tastendruck kurz erscheint.",
+    reactiveOff: "Aus",
+    dim: "Abdunkeln nach",
+    dimHint: "Sekunden im Leerlauf, bis die Beleuchtung abklingt. Null dunkelt nie ab.",
+    seconds: (n: number) => `${n} s`,
+    absent: "Das ausgewählte Gerät hat keine adressierbare Beleuchtung.",
+  },
   terms: {
+    top: "Oben",
+    middle: "Mitte",
+    bottom: "Unten",
+    static: "Statisch",
+    rainbow: "Regenbogen",
     off: "Aus",
     low: "Niedrig",
     medium: "Mittel",
@@ -500,6 +571,11 @@ export const de: Catalog = {
   },
 
   actions: {
+    settingResolution: "Auflösung wird gesetzt",
+    settingReportRate: "Abtastrate wird gesetzt",
+    settingLighting: "Beleuchtung wird gesetzt",
+    savingToDevice: "Wird im Gerät gespeichert",
+    switchingDevice: "Gerät wird gewechselt",
     settingVolume: "Lautstärke einstellen",
     changingMute: "Stummschaltung ändern",
     settingMicLevel: "Mikrofonpegel einstellen",

@@ -8,7 +8,7 @@ use tauri::State;
 use crate::audio::AudioState;
 use crate::device::error::{DeviceError, DeviceResult};
 use crate::device::types::{Capabilities, ConnectionState, DeviceInfo, DeviceState, DiscoveredDevice};
-use crate::device::DeviceManager;
+use crate::device::{DeviceManager, DeviceSummary};
 
 pub struct AppState {
     pub devices: Mutex<DeviceManager>,
@@ -69,6 +69,10 @@ pub struct Snapshot {
     pub audio_error: Option<DeviceError>,
     /// Whether the virtual game and chat outputs are currently in place.
     pub chatmix_routing: bool,
+    /// Every open device, for the sidebar. The fields above describe whichever
+    /// of them is selected; this is the list you choose from.
+    pub devices: Vec<DeviceSummary>,
+    pub selected: Option<String>,
 }
 
 #[tauri::command]
@@ -82,33 +86,30 @@ pub fn get_snapshot(app: State<'_, AppState>) -> Snapshot {
 /// can never disagree about what the device said.
 pub fn build_snapshot(app: &AppState) -> Snapshot {
     let mut manager = app.devices.lock();
-    let device = manager.info();
-    let capabilities = manager.capabilities();
-    let (state, state_error) = if device.is_some() {
-        match manager.state() {
-            Ok(s) => (Some(s), None),
-            Err(e) => (None, Some(e)),
-        }
-    } else {
-        (None, None)
-    };
-    let (audio, audio_error) = match manager.audio_state() {
-        Some(Ok(a)) => (Some(a), None),
-        Some(Err(e)) => (None, Some(e)),
-        None => (None, None),
-    };
-    let chatmix_routing = app.chatmix.lock().is_active();
+    // Every device is read, not only the one in front: the sidebar shows a
+    // battery for each, and a device nobody is looking at still has to be
+    // noticed coming back on.
+    let readings = manager.read_all();
+    let selected = manager.selected_id().map(str::to_string);
+    let devices: Vec<DeviceSummary> = readings.iter().map(DeviceSummary::from).collect();
+
+    let current = selected
+        .as_deref()
+        .and_then(|id| readings.iter().find(|r| r.info.id == id));
+
     Snapshot {
         connection: manager.connection(),
         mock_mode: manager.is_mock_mode(),
         host_error: manager.api_error().map(str::to_string),
-        device,
-        capabilities,
-        state,
-        state_error,
-        audio,
-        audio_error,
-        chatmix_routing,
+        device: current.map(|r| r.info.clone()),
+        capabilities: current.map(|r| r.capabilities.clone()),
+        state: current.and_then(|r| r.state.clone()),
+        state_error: current.and_then(|r| r.state_error.clone()),
+        audio: current.and_then(|r| r.audio.clone()),
+        audio_error: current.and_then(|r| r.audio_error.clone()),
+        chatmix_routing: app.chatmix.lock().is_active(),
+        devices,
+        selected,
     }
 }
 
@@ -163,6 +164,66 @@ pub async fn set_equalizer_preset(app: State<'_, AppState>, preset: u8) -> Devic
     app.devices
         .lock()
         .with_device(|d| d.set_equalizer_preset(preset))
+}
+
+// ---------------------------------------------------------------------------
+// Pointing devices
+// ---------------------------------------------------------------------------
+
+#[tauri::command]
+pub async fn set_dpi_presets(
+    app: State<'_, AppState>,
+    dpis: Vec<u32>,
+    active: u8,
+) -> DeviceResult<()> {
+    app.devices
+        .lock()
+        .with_device(|d| d.set_dpi_presets(&dpis, active))
+}
+
+#[tauri::command]
+pub async fn set_polling_rate(app: State<'_, AppState>, hz: u16) -> DeviceResult<()> {
+    app.devices.lock().with_device(|d| d.set_polling_rate(hz))
+}
+
+#[tauri::command]
+pub async fn set_lighting_color(
+    app: State<'_, AppState>,
+    zone: u8,
+    rgb: [u8; 3],
+) -> DeviceResult<()> {
+    app.devices
+        .lock()
+        .with_device(|d| d.set_lighting_color(zone, rgb))
+}
+
+#[tauri::command]
+pub async fn set_lighting_effect(app: State<'_, AppState>, effect: u8) -> DeviceResult<()> {
+    app.devices
+        .lock()
+        .with_device(|d| d.set_lighting_effect(effect))
+}
+
+#[tauri::command]
+pub async fn set_reactive_color(
+    app: State<'_, AppState>,
+    rgb: Option<[u8; 3]>,
+) -> DeviceResult<()> {
+    app.devices.lock().with_device(|d| d.set_reactive_color(rgb))
+}
+
+#[tauri::command]
+pub async fn set_dim_timer(app: State<'_, AppState>, seconds: u16) -> DeviceResult<()> {
+    app.devices.lock().with_device(|d| d.set_dim_timer(seconds))
+}
+
+/// Commit the selected device's settings to its own memory.
+///
+/// Its own command because it writes to flash: a slider that saved on every
+/// drag would write a hundred times to move one number.
+#[tauri::command]
+pub async fn save_to_device(app: State<'_, AppState>) -> DeviceResult<()> {
+    app.devices.lock().with_device(|d| d.save_to_device())
 }
 
 #[tauri::command]

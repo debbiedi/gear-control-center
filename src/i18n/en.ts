@@ -29,6 +29,8 @@ export const en = {
   },
 
   nav: {
+    sensor: "Sensor",
+    lighting: "Lighting",
     dashboard: "Dashboard",
     audio: "Audio",
     microphone: "Microphone",
@@ -421,8 +423,8 @@ export const en = {
 
   capabilities: {
     batteryLevel: "Battery level",
-    batteryLevelDetail: (steps: number) =>
-      `${steps} discrete levels (0 / 25 / 50 / 75 / 100%)`,
+    batteryLevelDetail: (steps: number, apart: number) =>
+      `${steps} discrete levels, ${apart}% apart`,
     batteryLevelAbsent: "Not reported by this device",
     chargingState: "Charging state",
     chargingStateDetail: "Reported while the cable is attached",
@@ -461,6 +463,19 @@ export const en = {
       "The headset cannot store profiles, so there is nothing to save to it",
     firmware: "Firmware update",
     firmwareAbsent: "No documented update path for this device",
+    dpi: "Sensor resolution",
+    dpiDetail: (count: number, min: number, max: number) =>
+      `${count} steps, ${min}-${max} CPI`,
+    dpiAbsent: "This device has no sensor",
+    pollingRate: "Report rate",
+    pollingRateDetail: (rates: string) => `${rates}`,
+    pollingRateAbsent: "Not adjustable on this device",
+    lightingZones: "Lighting zones",
+    lightingZonesDetail: (zones: string) => zones,
+    lightingZonesAbsent: "No addressable zones",
+    onboardMemory: "Onboard memory",
+    onboardMemoryDetail: "Settings can be written to the device itself",
+    onboardMemoryAbsent: "The device stores nothing of its own",
     rgb: "RGB lighting",
     rgbAbsent: "This headset has no addressable lighting",
     spatial: "Spatial audio",
@@ -478,7 +493,62 @@ export const en = {
    * normalised key and fall back to the raw string, so a device with terms
    * nobody has translated yet still shows something true.
    */
+  devices: {
+    title: "Devices",
+    readOnly: "Read-only",
+    off: "Off",
+    noReading: "No reading",
+  },
+
+  sensor: {
+    title: "Sensor",
+    lede: "The resolutions this mouse steps through, and how often it reports.",
+    presets: "Resolution presets",
+    presetsHint: (max: number) =>
+      `Up to ${max}. The button under the mouse steps through them in order.`,
+    preset: (n: number) => `Preset ${n}`,
+    selected: "Selected",
+    select: "Select this preset",
+    add: "Add a preset",
+    remove: "Remove",
+    cpi: "CPI",
+    snapped: (cpi: number) => `Nearest the sensor has: ${cpi} CPI`,
+    reportRate: "Report rate",
+    reportRateHint: "How often the mouse reports its position. Higher costs battery.",
+    hz: (n: number) => `${n} Hz`,
+    sleepTimer: "Sleep timer",
+    sleepTimerHint: (max: number) =>
+      `Idle minutes before the mouse powers itself down. Up to ${max}.`,
+    never: "Never",
+    minutes: (n: number) => `${n} min`,
+    save: "Save to the mouse",
+    saveHint:
+      "These are re-sent whenever the mouse wakes. Saving also puts them in the mouse's own memory, so they survive without this application running.",
+    saved: "Saved to the device",
+    absent: "The selected device has no sensor to configure.",
+  },
+
+  lighting: {
+    title: "Lighting",
+    lede: "Three LEDs along the shell of the mouse.",
+    effect: "Effect",
+    effectHint:
+      "Setting a colour is what stops the rainbow — the device has no separate command for it.",
+    zones: "Zone colours",
+    reactive: "Flash on click",
+    reactiveHint: "A colour shown briefly each time a button is pressed.",
+    reactiveOff: "Off",
+    dim: "Dim after",
+    dimHint: "Idle seconds before the lighting fades. Zero never dims.",
+    seconds: (n: number) => `${n} s`,
+    absent: "The selected device has no addressable lighting.",
+  },
   terms: {
+    top: "Top",
+    middle: "Middle",
+    bottom: "Bottom",
+    static: "Static",
+    rainbow: "Rainbow",
     off: "Off",
     low: "Low",
     medium: "Medium",
@@ -503,6 +573,11 @@ export const en = {
   },
 
   actions: {
+    settingResolution: "Setting the resolution",
+    settingReportRate: "Setting the report rate",
+    settingLighting: "Setting the lighting",
+    savingToDevice: "Saving to the device",
+    switchingDevice: "Switching device",
     settingVolume: "Setting the volume",
     changingMute: "Changing mute",
     settingMicLevel: "Setting the microphone level",

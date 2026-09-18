@@ -22,6 +22,8 @@ export const es: Catalog = {
   },
 
   nav: {
+    sensor: "Sensor",
+    lighting: "Iluminación",
     dashboard: "Panel",
     audio: "Audio",
     microphone: "Micrófono",
@@ -419,8 +421,8 @@ export const es: Catalog = {
 
   capabilities: {
     batteryLevel: "Nivel de batería",
-    batteryLevelDetail: (steps: number) =>
-      `${steps} niveles discretos (0 / 25 / 50 / 75 / 100 %)`,
+    batteryLevelDetail: (steps: number, apart: number) =>
+      `${steps} niveles discretos, separados un ${apart}%`,
     batteryLevelAbsent: "Este dispositivo no lo informa",
     chargingState: "Estado de carga",
     chargingStateDetail: "Se informa mientras el cable está conectado",
@@ -459,6 +461,19 @@ export const es: Catalog = {
       "Los auriculares no pueden guardar perfiles, así que no hay nada que guardar en ellos",
     firmware: "Actualización de firmware",
     firmwareAbsent: "No hay una vía de actualización documentada para este dispositivo",
+    dpi: "Resolución del sensor",
+    dpiDetail: (count: number, min: number, max: number) =>
+      `${count} pasos, ${min}-${max} CPI`,
+    dpiAbsent: "Este dispositivo no tiene sensor",
+    pollingRate: "Frecuencia de sondeo",
+    pollingRateDetail: (rates: string) => `${rates}`,
+    pollingRateAbsent: "No ajustable en este dispositivo",
+    lightingZones: "Zonas de iluminación",
+    lightingZonesDetail: (zones: string) => zones,
+    lightingZonesAbsent: "Sin zonas direccionables",
+    onboardMemory: "Memoria del dispositivo",
+    onboardMemoryDetail: "Los ajustes pueden escribirse en el propio dispositivo",
+    onboardMemoryAbsent: "El dispositivo no guarda nada por su cuenta",
     rgb: "Iluminación RGB",
     rgbAbsent: "Estos auriculares no tienen iluminación direccionable",
     spatial: "Audio espacial",
@@ -470,7 +485,63 @@ export const es: Catalog = {
     notAvailable: "No disponible",
   },
 
+  devices: {
+    title: "Dispositivos",
+    readOnly: "Solo lectura",
+    off: "Apagado",
+    noReading: "Sin lectura",
+  },
+
+  sensor: {
+    title: "Sensor",
+    lede: "Las resoluciones por las que pasa este ratón y con qué frecuencia informa.",
+    presets: "Niveles de resolución",
+    presetsHint: (max: number) =>
+      `Hasta ${max}. El botón bajo el ratón los recorre en orden.`,
+    preset: (n: number) => `Nivel ${n}`,
+    selected: "Seleccionado",
+    select: "Seleccionar este nivel",
+    add: "Añadir un nivel",
+    remove: "Quitar",
+    cpi: "CPI",
+    snapped: (cpi: number) => `Lo más cercano del sensor: ${cpi} CPI`,
+    reportRate: "Frecuencia de sondeo",
+    reportRateHint:
+      "Con qué frecuencia informa el ratón de su posición. Más alto consume batería.",
+    hz: (n: number) => `${n} Hz`,
+    sleepTimer: "Tiempo de reposo",
+    sleepTimerHint: (max: number) =>
+      `Minutos inactivo antes de que el ratón se apague. Hasta ${max}.`,
+    never: "Nunca",
+    minutes: (n: number) => `${n} min`,
+    save: "Guardar en el ratón",
+    saveHint:
+      "Estos valores se reenvían cada vez que el ratón despierta. Guardarlos los escribe además en la memoria del propio ratón, así que se mantienen sin esta aplicación.",
+    saved: "Guardado en el dispositivo",
+    absent: "El dispositivo seleccionado no tiene sensor configurable.",
+  },
+
+  lighting: {
+    title: "Iluminación",
+    lede: "Tres LED a lo largo del cuerpo del ratón.",
+    effect: "Efecto",
+    effectHint:
+      "Poner un color es lo que detiene el arcoíris: el dispositivo no tiene una orden aparte para eso.",
+    zones: "Colores por zona",
+    reactive: "Destello al hacer clic",
+    reactiveHint: "Un color que aparece un instante con cada pulsación.",
+    reactiveOff: "Apagado",
+    dim: "Atenuar tras",
+    dimHint: "Segundos inactivo antes de que la luz se apague. Cero no atenúa nunca.",
+    seconds: (n: number) => `${n} s`,
+    absent: "El dispositivo seleccionado no tiene iluminación direccionable.",
+  },
   terms: {
+    top: "Arriba",
+    middle: "Centro",
+    bottom: "Abajo",
+    static: "Fijo",
+    rainbow: "Arcoíris",
     off: "Apagado",
     low: "Bajo",
     medium: "Medio",
@@ -495,6 +566,11 @@ export const es: Catalog = {
   },
 
   actions: {
+    settingResolution: "Ajustando la resolución",
+    settingReportRate: "Ajustando la frecuencia de sondeo",
+    settingLighting: "Ajustando la iluminación",
+    savingToDevice: "Guardando en el dispositivo",
+    switchingDevice: "Cambiando de dispositivo",
     settingVolume: "Ajustar el volumen",
     changingMute: "Cambiar el silencio",
     settingMicLevel: "Ajustar el nivel del micrófono",

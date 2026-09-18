@@ -41,15 +41,21 @@ Two consequences you can see in the first screenshot:
 | SteelSeries Arctis 7+ | `1038:220e` | Verified against hardware — full control |
 | Arctis 7+ PS5 / Xbox / Destiny | `1038:2212`, `2216`, `2236` | Same protocol, untested |
 | SteelSeries Arctis Nova 7 / 7X | 12 ids, `1038:2202` and others | **Read-only**: written from documentation, unconfirmed |
+| SteelSeries Aerox 3 Wireless | `1038:1838` (radio), `1878` | Verified against hardware — sensor, report rate, lighting, sleep timer |
+| Aerox 3 Wireless on the cable | `1038:183a`, `187a` | **Read-only**: same source, not run with the cable in |
 | Simulated device | — | Always available, for development |
 
-A device implemented from documentation reads from your headset and will not
+A device implemented from documentation reads from your hardware and will not
 write to it. Two independent projects agreeing on a protocol is enough to
-implement a headset; it is not enough to send one a command nobody has ever
+implement a device; it is not enough to send one a command nobody has ever
 seen it answer. If you own one and the readings match what it reports
 elsewhere, say so in an issue and the controls are turned on.
 
-Other headsets are not supported yet, and will not be added on guesswork — see
+A headset and a mouse are held open at the same time, and the sidebar switches
+between them. Each keeps its own settings and its own battery reading; a device
+that stops answering is let go without disturbing the other.
+
+Other hardware is not supported yet, and will not be added on guesswork — see
 [Adding a device](#adding-a-device).
 
 ## Install

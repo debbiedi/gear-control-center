@@ -22,6 +22,8 @@ export const fr: Catalog = {
   },
 
   nav: {
+    sensor: "Capteur",
+    lighting: "Éclairage",
     dashboard: "Tableau de bord",
     audio: "Audio",
     microphone: "Microphone",
@@ -421,8 +423,8 @@ export const fr: Catalog = {
 
   capabilities: {
     batteryLevel: "Niveau de batterie",
-    batteryLevelDetail: (steps: number) =>
-      `${steps} niveaux discrets (0 / 25 / 50 / 75 / 100 %)`,
+    batteryLevelDetail: (steps: number, apart: number) =>
+      `${steps} niveaux distincts, espacés de ${apart} %`,
     batteryLevelAbsent: "Non rapporté par cet appareil",
     chargingState: "État de charge",
     chargingStateDetail: "Rapporté tant que le câble est branché",
@@ -462,6 +464,19 @@ export const fr: Catalog = {
     firmware: "Mise à jour du micrologiciel",
     firmwareAbsent:
       "Aucune procédure de mise à jour documentée pour cet appareil",
+    dpi: "Résolution du capteur",
+    dpiDetail: (count: number, min: number, max: number) =>
+      `${count} paliers, ${min}-${max} CPI`,
+    dpiAbsent: "Ce périphérique n'a pas de capteur",
+    pollingRate: "Fréquence d'interrogation",
+    pollingRateDetail: (rates: string) => `${rates}`,
+    pollingRateAbsent: "Non réglable sur ce périphérique",
+    lightingZones: "Zones d'éclairage",
+    lightingZonesDetail: (zones: string) => zones,
+    lightingZonesAbsent: "Aucune zone adressable",
+    onboardMemory: "Mémoire interne",
+    onboardMemoryDetail: "Les réglages peuvent être écrits dans le périphérique",
+    onboardMemoryAbsent: "Le périphérique ne conserve rien de lui-même",
     rgb: "Éclairage RVB",
     rgbAbsent: "Ce casque n'a pas d'éclairage adressable",
     spatial: "Audio spatial",
@@ -473,7 +488,63 @@ export const fr: Catalog = {
     notAvailable: "Indisponible",
   },
 
+  devices: {
+    title: "Périphériques",
+    readOnly: "Lecture seule",
+    off: "Éteint",
+    noReading: "Aucune mesure",
+  },
+
+  sensor: {
+    title: "Capteur",
+    lede: "Les résolutions que cette souris fait défiler, et la fréquence à laquelle elle se signale.",
+    presets: "Paliers de résolution",
+    presetsHint: (max: number) =>
+      `Jusqu'à ${max}. Le bouton sous la souris les parcourt dans l'ordre.`,
+    preset: (n: number) => `Palier ${n}`,
+    selected: "Sélectionné",
+    select: "Sélectionner ce palier",
+    add: "Ajouter un palier",
+    remove: "Retirer",
+    cpi: "CPI",
+    snapped: (cpi: number) => `Valeur la plus proche du capteur : ${cpi} CPI`,
+    reportRate: "Fréquence d'interrogation",
+    reportRateHint:
+      "À quelle fréquence la souris signale sa position. Plus haut consomme la batterie.",
+    hz: (n: number) => `${n} Hz`,
+    sleepTimer: "Mise en veille",
+    sleepTimerHint: (max: number) =>
+      `Minutes d'inactivité avant que la souris ne s'éteigne. Jusqu'à ${max}.`,
+    never: "Jamais",
+    minutes: (n: number) => `${n} min`,
+    save: "Enregistrer dans la souris",
+    saveHint:
+      "Ces valeurs sont renvoyées à chaque réveil de la souris. Les enregistrer les écrit en plus dans la mémoire de la souris, où elles subsistent sans cette application.",
+    saved: "Enregistré dans le périphérique",
+    absent: "Le périphérique sélectionné n'a pas de capteur à régler.",
+  },
+
+  lighting: {
+    title: "Éclairage",
+    lede: "Trois LED le long de la coque de la souris.",
+    effect: "Effet",
+    effectHint:
+      "Poser une couleur est ce qui arrête l'arc-en-ciel : le périphérique n'a pas de commande distincte pour cela.",
+    zones: "Couleurs par zone",
+    reactive: "Éclair au clic",
+    reactiveHint: "Une couleur montrée brièvement à chaque appui.",
+    reactiveOff: "Désactivé",
+    dim: "Atténuer après",
+    dimHint: "Secondes d'inactivité avant que l'éclairage ne baisse. Zéro n'atténue jamais.",
+    seconds: (n: number) => `${n} s`,
+    absent: "Le périphérique sélectionné n'a pas d'éclairage adressable.",
+  },
   terms: {
+    top: "Haut",
+    middle: "Milieu",
+    bottom: "Bas",
+    static: "Fixe",
+    rainbow: "Arc-en-ciel",
     off: "Désactivé",
     low: "Faible",
     medium: "Moyen",
@@ -498,6 +569,11 @@ export const fr: Catalog = {
   },
 
   actions: {
+    settingResolution: "Réglage de la résolution",
+    settingReportRate: "Réglage de la fréquence",
+    settingLighting: "Réglage de l'éclairage",
+    savingToDevice: "Enregistrement dans le périphérique",
+    switchingDevice: "Changement de périphérique",
     settingVolume: "Réglage du volume",
     changingMute: "Changement de la coupure",
     settingMicLevel: "Réglage du niveau du microphone",

@@ -31,6 +31,10 @@ describe("MeterBridge", () => {
             inactive_minutes: null,
             equalizer_db: null,
             equalizer_preset: null,
+            dpi_presets: null,
+            dpi_active: null,
+            polling_rate: null,
+            lighting: null,
           },
         })}
       />,
@@ -52,6 +56,10 @@ describe("MeterBridge", () => {
             inactive_minutes: null,
             equalizer_db: null,
             equalizer_preset: null,
+            dpi_presets: null,
+            dpi_active: null,
+            polling_rate: null,
+            lighting: null,
           },
         })}
       />,

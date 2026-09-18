@@ -17,6 +17,26 @@ export const NO_CAPABILITIES: Capabilities = {
   sidetone: null,
   equalizer: null,
   inactive_time: null,
+  dpi: null,
+  polling_rate: null,
+  lighting: null,
+  onboard_memory: false,
+};
+
+/** A pointing device, for tests about sections a headset does not have. */
+export const MOUSE_CAPABILITIES: Capabilities = {
+  ...NO_CAPABILITIES,
+  rgb: true,
+  battery: { steps: 21 },
+  inactive_time: { max_minutes: 20 },
+  dpi: { values: [400, 800, 1600], max_presets: 5 },
+  polling_rate: { rates: [125, 250, 500, 1000] },
+  lighting: {
+    zones: ["Top", "Middle", "Bottom"],
+    effects: ["Static", "Rainbow"],
+    reactive: true,
+  },
+  onboard_memory: true,
 };
 
 export function snapshotOf(
@@ -47,6 +67,8 @@ export function snapshotOf(
     audio: null,
     audioError: null,
     chatmixRouting: false,
+    devices: [],
+    selected: capabilities ? "d" : null,
     ...overrides,
   };
 }

@@ -64,6 +64,24 @@ pub struct Summary {
     pub sidetone: Option<u8>,
     pub inactive_minutes: Option<u8>,
     pub equalizer_preset: Option<u8>,
+    /// Every open device, the selected one included.
+    ///
+    /// Added rather than folded into the fields above: those describe the
+    /// selected device and scripts already read them that way. A status bar
+    /// that wants the mouse's battery beside the headset's reads this.
+    #[serde(default)]
+    pub devices: Vec<DeviceLine>,
+}
+
+/// One open device, for scripts that care that there is more than one.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct DeviceLine {
+    pub id: String,
+    pub name: String,
+    pub battery_percent: Option<u8>,
+    pub charging: bool,
+    pub powered_on: bool,
+    pub selected: bool,
 }
 
 impl From<&Snapshot> for Summary {
@@ -92,6 +110,18 @@ impl From<&Snapshot> for Summary {
             sidetone: state.and_then(|s| s.sidetone_level),
             inactive_minutes: state.and_then(|s| s.inactive_minutes),
             equalizer_preset: state.and_then(|s| s.equalizer_preset),
+            devices: snapshot
+                .devices
+                .iter()
+                .map(|d| DeviceLine {
+                    id: d.id.clone(),
+                    name: d.name.clone(),
+                    battery_percent: d.battery.map(|b| b.percent),
+                    charging: d.battery.is_some_and(|b| b.charging),
+                    powered_on: d.powered_on,
+                    selected: snapshot.selected.as_deref() == Some(d.id.as_str()),
+                })
+                .collect(),
         }
     }
 }
@@ -200,6 +230,20 @@ mod tests {
     }
 
     #[test]
+    fn a_summary_written_before_there_were_two_devices_still_reads() {
+        // The summary is a contract other people's status bars parse. Adding a
+        // field must not turn every previously valid document into an error.
+        let older = r#"{"device":"SteelSeries Arctis 7+","connected":true,
+            "powered_on":true,"battery_percent":50,"charging":false,
+            "game":100,"chat":100,"volume":null,"microphone":null,
+            "chatmix_routing":false,"sidetone":0,"inactive_minutes":null,
+            "equalizer_preset":0}"#;
+        let back: Summary = serde_json::from_str(older).expect("an older summary still parses");
+        assert_eq!(back.battery_percent, Some(50));
+        assert!(back.devices.is_empty());
+    }
+
+    #[test]
     fn an_unreadable_request_is_an_answer_rather_than_a_dropped_connection() {
         assert!(serde_json::from_str::<Request>("nonsense").is_err());
     }
@@ -220,12 +264,33 @@ mod tests {
             sidetone: Some(2),
             inactive_minutes: None,
             equalizer_preset: Some(1),
+            devices: vec![
+                DeviceLine {
+                    id: "1038:220e".into(),
+                    name: "SteelSeries Arctis 7+".into(),
+                    battery_percent: Some(75),
+                    charging: false,
+                    powered_on: true,
+                    selected: true,
+                },
+                DeviceLine {
+                    id: "1038:1838".into(),
+                    name: "SteelSeries Aerox 3 Wireless".into(),
+                    battery_percent: Some(100),
+                    charging: false,
+                    powered_on: true,
+                    selected: false,
+                },
+            ],
         };
         let text = serde_json::to_string(&summary).unwrap();
         let back: Summary = serde_json::from_str(&text).unwrap();
         assert_eq!(back.battery_percent, Some(75));
         assert_eq!(back.volume.unwrap().max, 77);
         assert_eq!(back.sidetone, Some(2));
+        assert_eq!(back.devices.len(), 2);
+        assert_eq!(back.devices[1].name, "SteelSeries Aerox 3 Wireless");
+        assert!(back.devices[0].selected && !back.devices[1].selected);
         assert_eq!(back.inactive_minutes, None);
         assert_eq!(back.equalizer_preset, Some(1));
         assert!(back.microphone.is_none());

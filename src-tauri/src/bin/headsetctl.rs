@@ -46,8 +46,11 @@ impl Running {
 
 fn summary_directly() -> Summary {
     let state = AppState::new();
-    // A device that will not open is not an error here: the snapshot says so.
-    let _ = state.devices.lock().connect(None);
+    // Everything on the bus, not the first thing on it: a mouse and a headset
+    // are both present and a script asking about one should not have to guess
+    // which happened to enumerate first. A device that will not open is not an
+    // error here — the snapshot says so.
+    state.devices.lock().open_all();
     Summary::from(&build_snapshot(&state))
 }
 
