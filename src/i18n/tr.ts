@@ -102,8 +102,9 @@ export const tr: Catalog = {
     lowChargeSoon: "Düşük — yakında şarj edin",
     runningOnBattery: "Pille çalışıyor",
     batteryResolution: (levels: number) =>
-      `Kulaklık yüzde yerine ${levels} kademe bildiriyor, bu yüzden bu değer basamaklar hâlinde değişir. Cihazın gönderdiği şeydir, bir tahmin değil.`,
-    batteryOff: "Kulaklık kapalı, bu yüzden pil seviyesi bildirmiyor.",
+      `Bu cihaz yüzde yerine ${levels} kademe bildiriyor, bu yüzden bu değer basamaklar hâlinde değişir. Cihazın gönderdiği şeydir, bir tahmin değil.`,
+    batteryOff:
+      "Cihaz pil seviyesi bildirmiyor — kapalı ya da uykuda.",
     batteryUnsupported: "Bu cihaz pil seviyesi bildirmiyor.",
 
     mixLegend: "Karışım",
@@ -128,7 +129,7 @@ export const tr: Catalog = {
     notReadBack: "Geri okunamıyor",
     notSupported: "Desteklenmiyor",
     notReadBackExplain:
-      '"Geri okunamıyor", kulaklığın ayarı kabul ettiği ama mevcut değerini sorma imkânı vermediği anlamına gelir. Burada gösterilen, cihaza söylenmiş olandır; yeniden bağlantıdan sonra tahmin etmek yerine hiçbir şey gösterilmez.',
+      '"Geri okunamıyor", cihazın ayarı kabul ettiği ama mevcut değerini sorma imkânı vermediği anlamına gelir. Burada gösterilen, cihaza söylenmiş olandır; yeniden bağlantıdan sonra tahmin etmek yerine hiçbir şey gösterilmez.',
   },
 
   audio: {
@@ -382,7 +383,7 @@ export const tr: Catalog = {
       "Seviye eşiğin altına düştüğünde bir kez gösterilir, tekrar tekrar değil.",
     threshold: "Eşik",
     thresholdNote:
-      "Yalnızca bu ikisi sunuluyor, çünkü kulaklık beş kademe bildiriyor — yüzde 0, 25, 50, 75 ve 100. %30'luk bir eşik, cihazın hiç göndermeyeceği bir sayıyı beklemek olurdu.",
+      "Yalnızca bu ikisi sunuluyor, çünkü desteklenen her cihazın bildirebildiği seviyeler bunlar: kulaklık beş kademe bildiriyor — yüzde 0, 25, 50, 75 ve 100 — mouse ise beşer beşer. %30'luk bir eşik, kulaklığın hiç göndermeyeceği bir sayıyı beklemek olurdu.",
 
     developmentLegend: "Geliştirme",
     simulatedTitle: "Simüle cihaz",

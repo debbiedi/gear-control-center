@@ -101,9 +101,9 @@ export const de: Catalog = {
     lowChargeSoon: "Niedrig — bald laden",
     runningOnBattery: "Akkubetrieb",
     batteryResolution: (levels: number) =>
-      `Das Headset meldet ${levels} Stufen statt eines Prozentwerts, deshalb springt diese Zahl. Sie ist das, was das Gerät gesendet hat, keine Schätzung.`,
+      `Dieses Gerät meldet ${levels} Stufen statt eines Prozentwerts, deshalb springt diese Zahl. Sie ist das, was das Gerät gesendet hat, keine Schätzung.`,
     batteryOff:
-      "Das Headset ist ausgeschaltet und meldet deshalb keinen Akkustand.",
+      "Das Gerät meldet keinen Akkustand — es ist ausgeschaltet oder im Ruhezustand.",
     batteryUnsupported: "Dieses Gerät meldet keinen Akkustand.",
 
     mixLegend: "Mischung",
@@ -129,7 +129,7 @@ export const de: Catalog = {
     notReadBack: "Nicht auslesbar",
     notSupported: "Nicht unterstützt",
     notReadBackExplain:
-      '„Nicht auslesbar“ heißt: Das Headset nimmt die Einstellung an, bietet aber keine Möglichkeit, den aktuellen Wert abzufragen. Hier steht, was ihm gesagt wurde; nach einer neuen Verbindung steht hier nichts, statt zu raten.',
+      '„Nicht auslesbar“ heißt: Das Gerät nimmt die Einstellung an, bietet aber keine Möglichkeit, den aktuellen Wert abzufragen. Hier steht, was ihm gesagt wurde; nach einer neuen Verbindung steht hier nichts, statt zu raten.',
   },
 
   audio: {
@@ -391,7 +391,7 @@ export const de: Catalog = {
       "Wird einmal angezeigt, wenn der Stand unter die Schwelle fällt, nicht wiederholt.",
     threshold: "Schwelle",
     thresholdNote:
-      "Nur diese beiden werden angeboten, weil das Headset fünf Stufen meldet — 0, 25, 50, 75 und 100 Prozent. Eine Schwelle von 30 % würde auf eine Zahl warten, die das Gerät nie sendet.",
+      "Nur diese beiden werden angeboten, weil es die Stufen sind, die jedes unterstützte Gerät melden kann: ein Headset meldet fünf — 0, 25, 50, 75 und 100 Prozent — eine Maus in Fünferschritten. Eine Schwelle von 30 % würde auf eine Zahl warten, die ein Headset nie sendet.",
 
     developmentLegend: "Entwicklung",
     simulatedTitle: "Simuliertes Gerät",

@@ -107,8 +107,9 @@ export const en = {
     lowChargeSoon: "Low — charge soon",
     runningOnBattery: "Running on battery",
     batteryResolution: (levels: number) =>
-      `The headset reports ${levels} levels rather than a percentage, so this figure moves in steps. It is what the device sent, not an estimate.`,
-    batteryOff: "The headset is switched off, so it is not reporting a battery level.",
+      `This device reports ${levels} levels rather than a percentage, so this figure moves in steps. It is what the device sent, not an estimate.`,
+    batteryOff:
+      "The device is not reporting a battery level — it is switched off or asleep.",
     batteryUnsupported: "This device does not report a battery level.",
 
     mixLegend: "Mix",
@@ -134,7 +135,7 @@ export const en = {
     notReadBack: "Not read back",
     notSupported: "Not supported",
     notReadBackExplain:
-      '"Not read back" means the headset accepts the setting but offers no way to ask for its current value. This build shows what it was told, and shows nothing after a reconnect rather than guessing.',
+      '"Not read back" means the device accepts the setting but offers no way to ask for its current value. This build shows what it was told, and shows nothing after a reconnect rather than guessing.',
   },
 
   audio: {
@@ -389,7 +390,7 @@ export const en = {
       "Shown once as the level drops past the threshold, not repeatedly.",
     threshold: "Threshold",
     thresholdNote:
-      "Only these two are offered because the headset reports five levels — 0, 25, 50, 75 and 100 per cent. A threshold of 30% would be waiting for a number the device never sends.",
+      "Only these two are offered because they are the levels every supported device can report: a headset reports five — 0, 25, 50, 75 and 100 per cent — and a mouse reports in steps of five. A threshold of 30% would be waiting for a number a headset never sends.",
 
     developmentLegend: "Development",
     simulatedTitle: "Simulated device",

@@ -101,9 +101,9 @@ export const fr: Catalog = {
     lowChargeSoon: "Faible — à recharger bientôt",
     runningOnBattery: "Sur batterie",
     batteryResolution: (levels: number) =>
-      `Le casque rapporte ${levels} niveaux plutôt qu'un pourcentage : cette valeur avance donc par paliers. C'est ce que l'appareil a envoyé, pas une estimation.`,
+      `Cet appareil rapporte ${levels} niveaux plutôt qu'un pourcentage : cette valeur avance donc par paliers. C'est ce que l'appareil a envoyé, pas une estimation.`,
     batteryOff:
-      "Le casque est éteint : il ne rapporte donc aucun niveau de batterie.",
+      "L'appareil ne rapporte aucun niveau de batterie : il est éteint ou en veille.",
     batteryUnsupported: "Cet appareil ne rapporte pas de niveau de batterie.",
 
     mixLegend: "Mixage",
@@ -129,7 +129,7 @@ export const fr: Catalog = {
     notReadBack: "Non relisible",
     notSupported: "Non pris en charge",
     notReadBackExplain:
-      "« Non relisible » signifie que le casque accepte le réglage mais n'offre aucun moyen d'en demander la valeur actuelle. Ce qui est affiché ici, c'est ce qui lui a été dit ; après une reconnexion, rien n'est affiché plutôt que de deviner.",
+      "« Non relisible » signifie que l'appareil accepte le réglage mais n'offre aucun moyen d'en demander la valeur actuelle. Ce qui est affiché ici, c'est ce qui lui a été dit ; après une reconnexion, rien n'est affiché plutôt que de deviner.",
   },
 
   audio: {
@@ -388,7 +388,7 @@ export const fr: Catalog = {
       "Affiché une fois au passage sous le seuil, pas de façon répétée.",
     threshold: "Seuil",
     thresholdNote:
-      "Seuls ces deux seuils sont proposés parce que le casque rapporte cinq niveaux : 0, 25, 50, 75 et 100 pour cent. Un seuil à 30 % attendrait un nombre que l'appareil n'envoie jamais.",
+      "Seuls ces deux seuils sont proposés parce que ce sont les niveaux que tout appareil pris en charge peut rapporter : un casque en rapporte cinq — 0, 25, 50, 75 et 100 pour cent — et une souris par pas de cinq. Un seuil à 30 % attendrait un nombre qu'un casque n'envoie jamais.",
 
     developmentLegend: "Développement",
     simulatedTitle: "Appareil simulé",

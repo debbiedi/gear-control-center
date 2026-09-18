@@ -100,9 +100,9 @@ export const es: Catalog = {
     lowChargeSoon: "Baja: cargue pronto",
     runningOnBattery: "Funcionando con batería",
     batteryResolution: (levels: number) =>
-      `Los auriculares informan ${levels} niveles en lugar de un porcentaje, por eso esta cifra avanza a saltos. Es lo que envió el dispositivo, no una estimación.`,
+      `Este dispositivo informa ${levels} niveles en lugar de un porcentaje, por eso esta cifra avanza a saltos. Es lo que envió el dispositivo, no una estimación.`,
     batteryOff:
-      "Los auriculares están apagados, así que no informan del nivel de batería.",
+      "El dispositivo no informa del nivel de batería: está apagado o en reposo.",
     batteryUnsupported: "Este dispositivo no informa del nivel de batería.",
 
     mixLegend: "Mezcla",
@@ -128,7 +128,7 @@ export const es: Catalog = {
     notReadBack: "No se puede leer",
     notSupported: "No compatible",
     notReadBackExplain:
-      "“No se puede leer” significa que los auriculares aceptan el ajuste pero no ofrecen forma de consultar su valor actual. Aquí se muestra lo que se les indicó, y tras una reconexión no se muestra nada en lugar de adivinar.",
+      "“No se puede leer” significa que el dispositivo acepta el ajuste pero no ofrece forma de consultar su valor actual. Aquí se muestra lo que se le indicó, y tras una reconexión no se muestra nada en lugar de adivinar.",
   },
 
   audio: {
@@ -386,7 +386,7 @@ export const es: Catalog = {
       "Se muestra una vez al bajar del umbral, no repetidamente.",
     threshold: "Umbral",
     thresholdNote:
-      "Solo se ofrecen estos dos porque los auriculares informan cinco niveles: 0, 25, 50, 75 y 100 por ciento. Un umbral del 30 % estaría esperando una cifra que el dispositivo nunca envía.",
+      "Solo se ofrecen estos dos porque son los niveles que todo dispositivo compatible puede informar: unos auriculares informan cinco — 0, 25, 50, 75 y 100 por ciento — y un ratón lo hace de cinco en cinco. Un umbral del 30 % estaría esperando una cifra que unos auriculares nunca envían.",
 
     developmentLegend: "Desarrollo",
     simulatedTitle: "Dispositivo simulado",
