@@ -143,6 +143,26 @@ fn describe(summary: &Summary) -> String {
     if summary.chatmix_routing {
         out.push_str(&field("Routing", "game and chat outputs in place".into()));
     }
+
+    // The block above describes one device. When a second is open, saying
+    // nothing about it would read as though it were not there — and the
+    // battery somebody ran this to check might be the one left out.
+    let others: Vec<&crate::ipc::DeviceLine> =
+        summary.devices.iter().filter(|d| !d.selected).collect();
+    if !others.is_empty() {
+        out.push_str("\nAlso open\n");
+        for device in others {
+            let reading = match device.battery_percent {
+                Some(percent) => format!(
+                    "{percent}%{}",
+                    if device.charging { " (charging)" } else { "" }
+                ),
+                None if device.powered_on => "battery not reported".into(),
+                None => "off".into(),
+            };
+            out.push_str(&format!("  {:<28}{reading}\n", device.name));
+        }
+    }
     out
 }
 
