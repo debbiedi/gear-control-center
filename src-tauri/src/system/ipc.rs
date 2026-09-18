@@ -1,6 +1,6 @@
 //! A local socket so the command line can reach a running window.
 //!
-//! Only one process can hold the headset's control interface, so `headsetctl`
+//! Only one process can hold the headset's control interface, so `gearctl`
 //! cannot simply open the device while the application is running. It asks the
 //! running instance instead, and falls back to opening the device itself when
 //! there is nothing to ask. The person typing the command sees no difference.
@@ -23,7 +23,7 @@ pub fn socket_path() -> PathBuf {
     let base = std::env::var_os("XDG_RUNTIME_DIR")
         .map(PathBuf::from)
         .unwrap_or_else(std::env::temp_dir);
-    base.join("headset-control-center.sock")
+    base.join("gear-control-center.sock")
 }
 
 #[derive(Debug, Deserialize)]
@@ -307,6 +307,6 @@ mod tests {
     #[test]
     fn the_socket_lives_in_the_runtime_directory_not_the_home_directory() {
         let path = socket_path();
-        assert!(path.ends_with("headset-control-center.sock"));
+        assert!(path.ends_with("gear-control-center.sock"));
     }
 }

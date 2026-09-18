@@ -57,7 +57,7 @@ SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1038", ATTRS{idProduct}=="1838", TAG+="ua
 SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1038", ATTRS{idProduct}=="183a", TAG+="uaccess"
 ```
 
-to `/etc/udev/rules.d/70-headset-control-center.rules` and reload with
+to `/etc/udev/rules.d/70-gear-control-center.rules` and reload with
 `sudo udevadm control --reload && sudo udevadm trigger`.
 
 ## Audio controls

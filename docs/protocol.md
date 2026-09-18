@@ -132,7 +132,7 @@ radio.
 
 One source rather than the two the Arctis entry required, so the battery
 command was checked against a physical mouse before the device was marked
-verified: `cargo run --example aerox_probe` reported the same level as
+verified: `cargo run --example probe` reported the same level as
 `rivalcfg --battery-level` on the same hardware at the same moment. A wrongly
 framed command gets no answer at all, so that agreement covers the report id,
 the wireless flag and the opcode together.

@@ -45,7 +45,7 @@ mkdir -p "$out"
 # as a mistake. They are renamed on the way out, and collected from the build
 # volume rather than hunted for. The volume is mounted inside the source tree
 # rather than at /target so that the paths in tauri.conf.json — which pulls
-# headsetctl into the package — resolve the same way they do on the host.
+# gearctl into the package — resolve the same way they do on the host.
 collect='mkdir -p /src/bundle && find /src/src-tauri/target/release/bundle -type f \
   \( -name "*.deb" -o -name "*.rpm" -o -name "*.AppImage" \) -print0 \
   | while IFS= read -r -d "" f; do \
@@ -61,7 +61,7 @@ for distro in "${targets[@]}"; do
   esac
 
   echo "==> building the $distro image"
-  docker build -q -t "headset-cc-build:$distro" \
+  docker build -q -t "gear-cc-build:$distro" \
     -f "$root/packaging/linux/Dockerfile.$distro" "$root/packaging/linux"
 
   echo "==> building $bundles"
@@ -69,8 +69,8 @@ for distro in "${targets[@]}"; do
   # rebuild is minutes rather than the best part of an hour.
   docker run --rm \
     -v "$stage:/src" \
-    -v "headset-cc-target-$distro:/src/src-tauri/target" \
-    "headset-cc-build:$distro" \
+    -v "gear-cc-target-$distro:/src/src-tauri/target" \
+    "gear-cc-build:$distro" \
     bash -euc "npm ci --no-audit --no-fund \
       && npm run tauri build -- --bundles $bundles \
       && $collect \

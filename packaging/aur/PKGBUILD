@@ -1,10 +1,10 @@
 # Maintainer: Kadir Nergiz <lahgamingtr@gmail.com>
-pkgname=headset-control-center
-pkgver=0.4.1
+pkgname=gear-control-center
+pkgver=0.5.0
 pkgrel=1
-pkgdesc="Desktop control panel for USB gaming headsets — shows only what the hardware actually reports"
+pkgdesc="Desktop control panel for USB gaming headsets and mice — shows only what the hardware actually reports"
 arch=('x86_64')
-url="https://github.com/debbiedi/headset-control-center"
+url="https://github.com/debbiedi/gear-control-center"
 license=('MIT')
 depends=(
   'webkit2gtk-4.1'
@@ -40,14 +40,14 @@ build() {
   # releases. Here pacman is the package manager, so only the binaries are
   # wanted.
   npm run tauri build -- --no-bundle
-  cargo build --release --manifest-path src-tauri/Cargo.toml --bin headsetctl
+  cargo build --release --manifest-path src-tauri/Cargo.toml --bin gearctl
 }
 
 package() {
   cd "$pkgname-$pkgver"
 
   install -Dm755 "src-tauri/target/release/$pkgname" "$pkgdir/usr/bin/$pkgname"
-  install -Dm755 "src-tauri/target/release/headsetctl" "$pkgdir/usr/bin/headsetctl"
+  install -Dm755 "src-tauri/target/release/gearctl" "$pkgdir/usr/bin/gearctl"
   install -Dm644 "packaging/$pkgname.desktop" \
     "$pkgdir/usr/share/applications/$pkgname.desktop"
 

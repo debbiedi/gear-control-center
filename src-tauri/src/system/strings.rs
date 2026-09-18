@@ -41,7 +41,7 @@ impl Default for NativeStrings {
             unmute_output: "Unmute output".into(),
             mute_microphone: "Mute microphone".into(),
             unmute_microphone: "Unmute microphone".into(),
-            open: "Open Headset Control Center".into(),
+            open: "Open Gear Control Center".into(),
             quit: "Quit".into(),
             low_battery_title: "{device} battery is low".into(),
             low_battery_body: "{percent}% remaining.".into(),

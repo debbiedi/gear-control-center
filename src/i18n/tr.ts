@@ -13,7 +13,7 @@ export const tr: Catalog = {
   },
 
   app: {
-    name: "Headset Control Center",
+    name: "Gear Control Center",
     tagline: "Yerel · Açık donanım",
     sections: "Bölümler",
     connection: "Bağlantı",
@@ -589,7 +589,7 @@ export const tr: Catalog = {
     unmuteOutput: "Sesi aç",
     muteMicrophone: "Mikrofonu sustur",
     unmuteMicrophone: "Mikrofonu aç",
-    open: "Headset Control Center'ı aç",
+    open: "Gear Control Center'ı aç",
     quit: "Çık",
     lowBatteryTitle: "{device} pili azaldı",
     lowBatteryBody: "%{percent} kaldı.",

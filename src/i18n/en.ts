@@ -18,7 +18,7 @@ export const en = {
   },
 
   app: {
-    name: "Headset Control Center",
+    name: "Gear Control Center",
     tagline: "Local · Open hardware",
     sections: "Sections",
     connection: "Connection",
@@ -607,7 +607,7 @@ export const en = {
     unmuteOutput: "Unmute output",
     muteMicrophone: "Mute microphone",
     unmuteMicrophone: "Unmute microphone",
-    open: "Open Headset Control Center",
+    open: "Open Gear Control Center",
     quit: "Quit",
     lowBatteryTitle: "{device} battery is low",
     lowBatteryBody: "{percent}% remaining.",

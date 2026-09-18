@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "Headset Control Center",
-  "version": "0.4.1",
-  "identifier": "dev.headsetcc.control",
+  "productName": "Gear Control Center",
+  "version": "0.5.0",
+  "identifier": "dev.gearcc.control",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Headset Control Center",
+        "title": "Gear Control Center",
         "width": 1280,
         "height": 820,
         "minWidth": 1024,
@@ -35,8 +35,8 @@
       "rpm"
     ],
     "category": "Utility",
-    "shortDescription": "Control and configure your gaming headset",
-    "longDescription": "Detects supported USB gaming headsets and exposes only the controls the connected hardware genuinely supports.",
+    "shortDescription": "Control and configure your gaming headset and mouse",
+    "longDescription": "Detects supported USB gaming headsets and mice, holds them open together, and exposes only the controls the connected hardware genuinely supports.",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -47,12 +47,12 @@
     "linux": {
       "deb": {
         "files": {
-          "/usr/bin/headsetctl": "target/release/headsetctl"
+          "/usr/bin/gearctl": "target/release/gearctl"
         }
       },
       "rpm": {
         "files": {
-          "/usr/bin/headsetctl": "target/release/headsetctl"
+          "/usr/bin/gearctl": "target/release/gearctl"
         }
       }
     }

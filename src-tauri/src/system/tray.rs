@@ -33,7 +33,7 @@ pub fn create(app: &AppHandle) -> tauri::Result<()> {
     let mute = MenuItem::with_id(app, "toggle-mute", "Mute output", true, None::<&str>)?;
     let microphone =
         MenuItem::with_id(app, "toggle-microphone", "Mute microphone", true, None::<&str>)?;
-    let show = MenuItem::with_id(app, "show", "Open Headset Control Center", true, None::<&str>)?;
+    let show = MenuItem::with_id(app, "show", "Open Gear Control Center", true, None::<&str>)?;
     let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
 
     let menu = Menu::with_items(
@@ -52,7 +52,7 @@ pub fn create(app: &AppHandle) -> tauri::Result<()> {
 
     let mut builder = TrayIconBuilder::with_id(TRAY_ID)
         .menu(&menu)
-        .tooltip("Headset Control Center")
+        .tooltip("Gear Control Center")
         .on_menu_event(|app, event| match event.id.as_ref() {
             "show" => show_window(app),
             "quit" => {

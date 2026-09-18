@@ -8,17 +8,17 @@
 use std::io::{BufRead, BufReader, Write};
 use std::os::unix::net::UnixStream;
 
-use headset_cc_lib::commands::{build_snapshot, AppState};
-use headset_cc_lib::system::ipc::{self, Summary};
+use gear_cc_lib::commands::{build_snapshot, AppState};
+use gear_cc_lib::system::ipc::{self, Summary};
 
 const USAGE: &str = "\
-headsetctl — control a supported headset from the shell
+gearctl — control a supported headset from the shell
 
-  headsetctl                     what the headset is doing
-  headsetctl --json              the same as one JSON object
-  headsetctl --waybar            a Waybar custom module object
-  headsetctl set <name> <value>  change one setting
-  headsetctl watch               print a line whenever something changes
+  gearctl                     what the headset is doing
+  gearctl --json              the same as one JSON object
+  gearctl --waybar            a Waybar custom module object
+  gearctl set <name> <value>  change one setting
+  gearctl watch               print a line whenever something changes
 
 Settings: sidetone 0-3 · volume · mic · mute 0|1 · mic-mute 0|1
           auto-off <minutes> · eq-preset <index>
@@ -175,7 +175,7 @@ fn main() {
         }
         "set" => {
             let (Some(key), Some(raw)) = (args.get(1), args.get(2)) else {
-                eprintln!("set needs a name and a value, for example: headsetctl set sidetone 2");
+                eprintln!("set needs a name and a value, for example: gearctl set sidetone 2");
                 std::process::exit(2);
             };
             match raw.parse::<i64>() {

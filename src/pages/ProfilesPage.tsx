@@ -250,7 +250,7 @@ export function ProfilesPage({ snapshot }: { snapshot: Snapshot | null }) {
           <p>{t.profiles.howBody1}</p>
           <p>{t.profiles.howBody2}</p>
           <p className="readout text-[12px] text-ink-faint">
-            ~/.config/headset-control-center/profiles.json
+            ~/.config/gear-control-center/profiles.json
           </p>
         </div>
       </Panel>

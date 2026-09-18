@@ -32,7 +32,7 @@ else is missing.
 is the whole job once an account exists.
 
 ```bash
-git clone ssh://aur@aur.archlinux.org/headset-control-center.git aur-repo
+git clone ssh://aur@aur.archlinux.org/gear-control-center.git aur-repo
 cp PKGBUILD .SRCINFO aur-repo/
 cd aur-repo
 git add PKGBUILD .SRCINFO

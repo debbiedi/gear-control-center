@@ -490,7 +490,7 @@ pub async fn export_diagnostics(app: State<'_, AppState>) -> DeviceResult<String
     let settings = app.settings.lock().clone();
 
     let mut out = String::new();
-    out.push_str("Headset Control Center diagnostics\n");
+    out.push_str("Gear Control Center diagnostics\n");
     out.push_str(&format!("version: {}\n", env!("CARGO_PKG_VERSION")));
     out.push_str(&format!("os: {} {}\n", std::env::consts::OS, std::env::consts::ARCH));
     out.push_str(&format!("simulated: {}\n\n", snapshot.mock_mode));

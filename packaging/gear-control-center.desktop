@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Gear Control Center
+GenericName=Gaming Peripheral Settings
+Comment=Control and configure your USB gaming headset and mouse
+Exec=gear-control-center
+Icon=gear-control-center
+Terminal=false
+Categories=Settings;HardwareSettings;
+Keywords=headset;headphones;audio;equaliser;equalizer;microphone;battery;mouse;dpi;cpi;sensor;lighting;rgb;
+StartupWMClass=Gear Control Center

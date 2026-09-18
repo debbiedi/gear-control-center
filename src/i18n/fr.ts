@@ -11,7 +11,7 @@ export const fr: Catalog = {
   meta: { name: "Français" },
 
   app: {
-    name: "Headset Control Center",
+    name: "Gear Control Center",
     tagline: "Local · Ouvert",
     sections: "Sections",
     connection: "Connexion",
@@ -597,7 +597,7 @@ export const fr: Catalog = {
     unmuteOutput: "Rétablir la sortie",
     muteMicrophone: "Couper le microphone",
     unmuteMicrophone: "Rétablir le microphone",
-    open: "Ouvrir Headset Control Center",
+    open: "Ouvrir Gear Control Center",
     quit: "Quitter",
     lowBatteryTitle: "Batterie faible sur {device}",
     lowBatteryBody: "Il reste {percent} %.",
