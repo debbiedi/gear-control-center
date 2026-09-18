@@ -10,7 +10,7 @@ translation to choose between — and anything with no catalogue falls back to
 English.
 
 **Settings → Interface language** overrides that, and the choice is stored in
-`~/.config/headset-control-center/settings.json`. It applies immediately,
+`~/.config/gear-control-center/settings.json`. It applies immediately,
 including to the tray menu and notifications.
 
 ## Adding a language

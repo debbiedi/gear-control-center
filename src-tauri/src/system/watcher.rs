@@ -5,12 +5,18 @@
 //! late. Reading here instead gives one reader, one cadence, and a push to
 //! whatever is listening.
 //!
-//! It also covers hot-plug: a dongle appearing is noticed on the next pass and
-//! opened, and a dongle disappearing surfaces as a failed read, which demotes
-//! the connection rather than leaving stale numbers on screen. That is why
-//! there is no separate udev watcher — a one-second scan of a bus that has
-//! four devices on it costs less than the machinery to avoid it.
+//! It also covers hot-plug: a device appearing is noticed on the next pass and
+//! opened, and one disappearing surfaces as a failed read, which demotes the
+//! connection rather than leaving stale numbers on screen. That is why there is
+//! no separate udev watcher — a one-second scan of a bus that has four devices
+//! on it costs less than the machinery to avoid it.
+//!
+//! What this file does *not* do is keep devices in order. Releasing a handle
+//! that has stopped answering, and re-sending settings to one that has just
+//! come on, both belong to the device layer; this one supplies the cadence and
+//! publishes what came back.
 
+use std::collections::HashMap;
 use std::{thread, time::Duration};
 
 use tauri::{AppHandle, Emitter, Manager};
@@ -22,71 +28,25 @@ use crate::system::tray;
 /// volume wheel feel live, slow enough to be invisible in CPU terms.
 const INTERVAL: Duration = Duration::from_millis(900);
 
-/// Consecutive failed reads before the handle is dropped.
-///
-/// One failure is a hiccup. Three in a row means the dongle is gone, and
-/// holding a dead handle would leave the application stuck reporting
-/// "Reconnecting" for ever — including after the dongle came back, because
-/// rediscovery only runs when nothing is open.
-const FAILURES_BEFORE_RELEASE: u8 = 3;
-
 /// Event name the interface subscribes to.
 pub const SNAPSHOT_EVENT: &str = "device://snapshot";
 
 pub fn spawn(app: AppHandle) {
     thread::spawn(move || {
-        let mut last_percent: Option<u8> = None;
-        let mut failures: u8 = 0;
-        let mut was_on = false;
+        // One reading per device, so a headset crossing the threshold does not
+        // silence the warning a mouse is about to need.
+        let mut last_percent: HashMap<String, u8> = HashMap::new();
         loop {
         {
             let state = app.state::<AppState>();
 
-            // Reconnect on its own. A headset that was switched off and back on
-            // should not need the window to be poked.
-            let needs_device = {
-                let manager = state.devices.lock();
-                manager.info().is_none()
-            };
-            if needs_device {
-                let mut manager = state.devices.lock();
-                let available = manager
-                    .discover()
-                    .into_iter()
-                    .find(|d| d.unavailable.is_none())
-                    .map(|d| d.info.id);
-                if let Some(id) = available {
-                    match manager.connect(Some(&id)) {
-                        Ok(info) => log::info!("connected to {}", info.name),
-                        Err(e) => log::debug!("could not open {id}: {e}"),
-                    }
-                }
-            }
+            // Pick up whatever is on the bus and not already open. A device
+            // that was switched off and back on, or plugged in while the window
+            // was sitting there, should not need the window to be poked.
+            state.devices.lock().open_all();
 
             let snapshot = build_snapshot(&state);
             follow_the_dial(&state, &snapshot);
-
-            // The headset coming on — at start, after a power cycle, after the
-            // dongle is plugged back in — is when it has to be told its
-            // settings again. The three it does not report back would
-            // otherwise read "unknown" here and sit at its own defaults there.
-            let on_now = snapshot.state.as_ref().is_some_and(|s| s.powered_on);
-            if on_now && !was_on {
-                state.devices.lock().restore();
-            }
-            was_on = on_now;
-
-            if snapshot.state_error.is_some() {
-                failures = failures.saturating_add(1);
-                if failures >= FAILURES_BEFORE_RELEASE {
-                    log::warn!("releasing the device after {failures} failed reads");
-                    state.devices.lock().disconnect();
-                    failures = 0;
-                    last_percent = None;
-                }
-            } else {
-                failures = 0;
-            }
 
             tray::update(&app, &snapshot);
             notify_on_low_battery(&app, &state, &snapshot, &mut last_percent);
@@ -123,25 +83,42 @@ fn follow_the_dial(state: &AppState, snapshot: &crate::commands::Snapshot) {
     }
 }
 
-/// Warn once as the battery crosses the threshold downwards.
+/// Warn once as a battery crosses the threshold downwards.
 ///
-/// Once, not every second: the headset reports five levels, so a warning tied
-/// to "battery is low" rather than "battery just became low" would fire nine
-/// hundred times before the user noticed the first one.
+/// Once, not every second: a warning tied to "battery is low" rather than
+/// "battery just became low" would fire nine hundred times before the user
+/// noticed the first one. Tracked per device, because two devices cross the
+/// same threshold at different times and one must not stand in for the other.
 fn notify_on_low_battery(
     app: &AppHandle,
     state: &AppState,
     snapshot: &crate::commands::Snapshot,
-    last_percent: &mut Option<u8>,
+    last_percent: &mut HashMap<String, u8>,
+) {
+    // A device that has gone quiet or been unplugged loses its reading, so
+    // coming back at a low level warns again rather than being taken for a
+    // level it never left.
+    last_percent.retain(|id, _| snapshot.devices.iter().any(|d| &d.id == id));
+
+    for device in &snapshot.devices {
+        notify_for_one(app, state, device, last_percent);
+    }
+}
+
+fn notify_for_one(
+    app: &AppHandle,
+    state: &AppState,
+    device: &crate::device::DeviceSummary,
+    last_percent: &mut HashMap<String, u8>,
 ) {
     use tauri_plugin_notification::NotificationExt;
 
-    let Some(battery) = snapshot.state.as_ref().and_then(|s| s.battery.as_ref()) else {
-        *last_percent = None;
+    let Some(battery) = device.battery.as_ref() else {
+        last_percent.remove(&device.id);
         return;
     };
     let settings = state.settings.lock().clone();
-    let previous = last_percent.replace(battery.percent);
+    let previous = last_percent.insert(device.id.clone(), battery.percent);
 
     if !settings.low_battery_notification || battery.charging {
         return;
@@ -152,11 +129,7 @@ fn notify_on_low_battery(
         return;
     }
     let text = state.strings.lock().clone();
-    let name = snapshot
-        .device
-        .as_ref()
-        .map(|d| d.name.as_str())
-        .unwrap_or("Headset");
+    let name = device.name.as_str();
     if let Err(e) = app
         .notification()
         .builder()

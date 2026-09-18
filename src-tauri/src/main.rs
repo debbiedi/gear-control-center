@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    headset_cc_lib::run();
+    gear_cc_lib::run();
 }

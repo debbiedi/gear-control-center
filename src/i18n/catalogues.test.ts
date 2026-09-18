@@ -26,7 +26,7 @@ describe.each(entries)("%s catalogue", (_locale, catalogue) => {
     expect(catalogue.dashboard.batteryResolution(5)).toContain("5");
     expect(catalogue.device.minutes(30)).toContain("30");
     expect(catalogue.device.autoShutOffDetail(90)).toContain("90");
-    expect(catalogue.capabilities.batteryLevelDetail(5)).toContain("5");
+    expect(catalogue.capabilities.batteryLevelDetail(5, 25)).toContain("5");
     expect(catalogue.capabilities.inactiveTimeDetail(90)).toContain("90");
     expect(catalogue.errors.failed("X")).toContain("X");
     expect(catalogue.conflict.title("Arctis")).toContain("Arctis");

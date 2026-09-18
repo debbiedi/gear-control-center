@@ -1322,6 +1322,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "gear-control-center"
+version = "0.5.0"
+dependencies = [
+ "alsa",
+ "hidapi",
+ "log",
+ "parking_lot",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-autostart",
+ "tauri-plugin-log",
+ "tauri-plugin-notification",
+ "tauri-plugin-single-instance",
+ "thiserror 2.0.20",
+ "udev",
+]
+
+[[package]]
 name = "generic-array"
 version = "0.14.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1524,26 +1544,6 @@ name = "hashbrown"
 version = "0.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ed5909b6e89a2db4456e54cd5f673791d7eca6732202bbf2a9cc504fe2f9b84a"
-
-[[package]]
-name = "headset-control-center"
-version = "0.4.1"
-dependencies = [
- "alsa",
- "hidapi",
- "log",
- "parking_lot",
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "tauri-plugin-autostart",
- "tauri-plugin-log",
- "tauri-plugin-notification",
- "tauri-plugin-single-instance",
- "thiserror 2.0.20",
- "udev",
-]
 
 [[package]]
 name = "heck"

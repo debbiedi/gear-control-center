@@ -88,12 +88,12 @@ jobs:
           # packaging/linux/build.sh, and uploaded to the same release.
           args: --bundles deb,appimage
           tagName: ${{ github.ref_name }}
-          releaseName: "Headset Control Center ${{ github.ref_name }}"
+          releaseName: "Gear Control Center ${{ github.ref_name }}"
           releaseBody: |
             Built on Ubuntu 22.04, so the packages run on glibc 2.35 and newer.
 
             **AppImage** — `chmod +x` and run it. Nothing to install.
-            **deb** — `sudo apt install ./headset-control-center_*.deb`
+            **deb** — `sudo apt install ./gear-control-center_*.deb`
 
             No udev rule is needed on a current distribution. If the headset is
             found but cannot be opened, something else is holding it — see

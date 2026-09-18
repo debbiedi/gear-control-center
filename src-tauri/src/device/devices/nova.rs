@@ -214,6 +214,10 @@ impl DeviceProtocol for ArctisNova7 {
             inactive_minutes: None,
             equalizer_db: None,
             equalizer_preset: None,
+            dpi_presets: None,
+            dpi_active: None,
+            polling_rate: None,
+            lighting: None,
         })
     }
 }

@@ -13,7 +13,7 @@ export const tr: Catalog = {
   },
 
   app: {
-    name: "Headset Control Center",
+    name: "Gear Control Center",
     tagline: "Yerel · Açık donanım",
     sections: "Bölümler",
     connection: "Bağlantı",
@@ -24,6 +24,8 @@ export const tr: Catalog = {
   },
 
   nav: {
+    sensor: "Sensör",
+    lighting: "Aydınlatma",
     dashboard: "Panel",
     audio: "Ses",
     microphone: "Mikrofon",
@@ -100,8 +102,9 @@ export const tr: Catalog = {
     lowChargeSoon: "Düşük — yakında şarj edin",
     runningOnBattery: "Pille çalışıyor",
     batteryResolution: (levels: number) =>
-      `Kulaklık yüzde yerine ${levels} kademe bildiriyor, bu yüzden bu değer basamaklar hâlinde değişir. Cihazın gönderdiği şeydir, bir tahmin değil.`,
-    batteryOff: "Kulaklık kapalı, bu yüzden pil seviyesi bildirmiyor.",
+      `Bu cihaz yüzde yerine ${levels} kademe bildiriyor, bu yüzden bu değer basamaklar hâlinde değişir. Cihazın gönderdiği şeydir, bir tahmin değil.`,
+    batteryOff:
+      "Cihaz pil seviyesi bildirmiyor — kapalı ya da uykuda.",
     batteryUnsupported: "Bu cihaz pil seviyesi bildirmiyor.",
 
     mixLegend: "Karışım",
@@ -126,7 +129,7 @@ export const tr: Catalog = {
     notReadBack: "Geri okunamıyor",
     notSupported: "Desteklenmiyor",
     notReadBackExplain:
-      '"Geri okunamıyor", kulaklığın ayarı kabul ettiği ama mevcut değerini sorma imkânı vermediği anlamına gelir. Burada gösterilen, cihaza söylenmiş olandır; yeniden bağlantıdan sonra tahmin etmek yerine hiçbir şey gösterilmez.',
+      '"Geri okunamıyor", cihazın ayarı kabul ettiği ama mevcut değerini sorma imkânı vermediği anlamına gelir. Burada gösterilen, cihaza söylenmiş olandır; yeniden bağlantıdan sonra tahmin etmek yerine hiçbir şey gösterilmez.',
   },
 
   audio: {
@@ -380,7 +383,7 @@ export const tr: Catalog = {
       "Seviye eşiğin altına düştüğünde bir kez gösterilir, tekrar tekrar değil.",
     threshold: "Eşik",
     thresholdNote:
-      "Yalnızca bu ikisi sunuluyor, çünkü kulaklık beş kademe bildiriyor — yüzde 0, 25, 50, 75 ve 100. %30'luk bir eşik, cihazın hiç göndermeyeceği bir sayıyı beklemek olurdu.",
+      "Yalnızca bu ikisi sunuluyor, çünkü desteklenen her cihazın bildirebildiği seviyeler bunlar: kulaklık beş kademe bildiriyor — yüzde 0, 25, 50, 75 ve 100 — mouse ise beşer beşer. %30'luk bir eşik, kulaklığın hiç göndermeyeceği bir sayıyı beklemek olurdu.",
 
     developmentLegend: "Geliştirme",
     simulatedTitle: "Simüle cihaz",
@@ -414,8 +417,8 @@ export const tr: Catalog = {
 
   capabilities: {
     batteryLevel: "Pil seviyesi",
-    batteryLevelDetail: (steps: number) =>
-      `${steps} ayrık kademe (%0 / 25 / 50 / 75 / 100)`,
+    batteryLevelDetail: (steps: number, apart: number) =>
+      `${steps} ayrı kademe, aralarında %${apart}`,
     batteryLevelAbsent: "Bu cihaz tarafından bildirilmiyor",
     chargingState: "Şarj durumu",
     chargingStateDetail: "Kablo takılıyken bildirilir",
@@ -454,6 +457,19 @@ export const tr: Catalog = {
       "Kulaklık profil saklayamıyor, dolayısıyla ona kaydedilecek bir şey de yok",
     firmware: "Yazılım güncelleme",
     firmwareAbsent: "Bu cihaz için belgelenmiş bir güncelleme yolu yok",
+    dpi: "Sensör çözünürlüğü",
+    dpiDetail: (count: number, min: number, max: number) =>
+      `${count} kademe, ${min}-${max} CPI`,
+    dpiAbsent: "Bu cihazda sensör yok",
+    pollingRate: "Bildirim hızı",
+    pollingRateDetail: (rates: string) => `${rates}`,
+    pollingRateAbsent: "Bu cihazda ayarlanamıyor",
+    lightingZones: "Aydınlatma bölgeleri",
+    lightingZonesDetail: (zones: string) => zones,
+    lightingZonesAbsent: "Adreslenebilir bölge yok",
+    onboardMemory: "Cihaz belleği",
+    onboardMemoryDetail: "Ayarlar cihazın kendisine yazılabilir",
+    onboardMemoryAbsent: "Cihaz kendi başına bir şey saklamıyor",
     rgb: "RGB aydınlatma",
     rgbAbsent: "Bu kulaklıkta adreslenebilir aydınlatma yok",
     spatial: "Uzamsal ses",
@@ -465,7 +481,63 @@ export const tr: Catalog = {
     notAvailable: "Mevcut değil",
   },
 
+  devices: {
+    title: "Cihazlar",
+    readOnly: "Salt okunur",
+    off: "Kapalı",
+    noReading: "Okuma yok",
+  },
+
+  sensor: {
+    title: "Sensör",
+    lede: "Farenin sırayla geçtiği çözünürlükler ve konumunu ne sıklıkla bildirdiği.",
+    presets: "Çözünürlük kademeleri",
+    presetsHint: (max: number) =>
+      `En fazla ${max} tane. Farenin altındaki tuş bunlar arasında sırayla geçer.`,
+    preset: (n: number) => `${n}. kademe`,
+    selected: "Seçili",
+    select: "Bu kademeyi seç",
+    add: "Kademe ekle",
+    remove: "Kaldır",
+    cpi: "CPI",
+    snapped: (cpi: number) => `Sensörün en yakın değeri: ${cpi} CPI`,
+    reportRate: "Bildirim hızı",
+    reportRateHint:
+      "Farenin konumunu ne sıklıkla bildirdiği. Yüksek değer pilden yer.",
+    hz: (n: number) => `${n} Hz`,
+    sleepTimer: "Uyku süresi",
+    sleepTimerHint: (max: number) =>
+      `Fare kaç dakika boşta kalınca kendini kapatsın. En fazla ${max}.`,
+    never: "Hiç",
+    minutes: (n: number) => `${n} dk`,
+    save: "Fareye kaydet",
+    saveHint:
+      "Bu ayarlar fare her uyandığında yeniden gönderilir. Kaydetmek ayrıca farenin kendi belleğine yazar; böylece bu uygulama çalışmasa da kalırlar.",
+    saved: "Cihaza kaydedildi",
+    absent: "Seçili cihazda ayarlanacak bir sensör yok.",
+  },
+
+  lighting: {
+    title: "Aydınlatma",
+    lede: "Farenin gövdesi boyunca üç LED.",
+    effect: "Efekt",
+    effectHint:
+      "Gökkuşağını durduran şey renk atamaktır — cihazda bunun için ayrı bir komut yok.",
+    zones: "Bölge renkleri",
+    reactive: "Tıklayınca yanıp sönsün",
+    reactiveHint: "Her tuşa basıldığında kısaca gösterilen renk.",
+    reactiveOff: "Kapalı",
+    dim: "Şu süre sonra kıs",
+    dimHint: "Işığın sönmesi için boşta geçecek saniye. Sıfır hiç kısmaz.",
+    seconds: (n: number) => `${n} sn`,
+    absent: "Seçili cihazda adreslenebilir aydınlatma yok.",
+  },
   terms: {
+    top: "Üst",
+    middle: "Orta",
+    bottom: "Alt",
+    static: "Sabit",
+    rainbow: "Gökkuşağı",
     off: "Kapalı",
     low: "Düşük",
     medium: "Orta",
@@ -490,6 +562,11 @@ export const tr: Catalog = {
   },
 
   actions: {
+    settingResolution: "Çözünürlük ayarlanıyor",
+    settingReportRate: "Bildirim hızı ayarlanıyor",
+    settingLighting: "Aydınlatma ayarlanıyor",
+    savingToDevice: "Cihaza kaydediliyor",
+    switchingDevice: "Cihaz değiştiriliyor",
     settingVolume: "Ses ayarlanıyor",
     changingMute: "Susturma değiştiriliyor",
     settingMicLevel: "Mikrofon seviyesi ayarlanıyor",
@@ -513,7 +590,7 @@ export const tr: Catalog = {
     unmuteOutput: "Sesi aç",
     muteMicrophone: "Mikrofonu sustur",
     unmuteMicrophone: "Mikrofonu aç",
-    open: "Headset Control Center'ı aç",
+    open: "Gear Control Center'ı aç",
     quit: "Çık",
     lowBatteryTitle: "{device} pili azaldı",
     lowBatteryBody: "%{percent} kaldı.",

@@ -1,25 +1,25 @@
-# Headset Control Center
+# Gear Control Center
 
 [![Licence: MIT](https://img.shields.io/badge/licence-MIT-d9a441.svg)](LICENSE)
 [![Platform: Linux](https://img.shields.io/badge/platform-Linux-2a3238.svg)](#requirements)
 
-A desktop control panel for USB gaming headsets on Linux. Tauri v2 and React in
-front, Rust and hidapi behind.
+A desktop control panel for USB gaming headsets and mice on Linux. Tauri v2 and
+React in front, Rust and hidapi behind.
 
 It is local software: no account, no telemetry, no network access. It talks to
-the headset over USB and to nothing else.
+your devices over USB and to nothing else.
 
 ![Dashboard](docs/screenshots/01-dashboard.png)
 
 ## Why this exists
 
-The vendor software for these headsets is Windows-only, and the Linux
+The vendor software for these devices is Windows-only, and the Linux
 alternatives are command-line tools. This is a full control panel — built on
 one rule the vendor software does not follow:
 
 > **A control exists only if it reaches the device.**
 
-If the headset cannot do something, the application says so in the place you
+If the device cannot do something, the application says so in the place you
 would have looked for it. Nothing is done in software and presented as a
 hardware feature, and no button reports success for a command that was never
 sent.
@@ -41,15 +41,21 @@ Two consequences you can see in the first screenshot:
 | SteelSeries Arctis 7+ | `1038:220e` | Verified against hardware — full control |
 | Arctis 7+ PS5 / Xbox / Destiny | `1038:2212`, `2216`, `2236` | Same protocol, untested |
 | SteelSeries Arctis Nova 7 / 7X | 12 ids, `1038:2202` and others | **Read-only**: written from documentation, unconfirmed |
+| SteelSeries Aerox 3 Wireless | `1038:1838` (radio), `1878` | Verified against hardware — sensor, report rate, lighting, sleep timer |
+| Aerox 3 Wireless on the cable | `1038:183a`, `187a` | **Read-only**: same source, not run with the cable in |
 | Simulated device | — | Always available, for development |
 
-A device implemented from documentation reads from your headset and will not
+A device implemented from documentation reads from your hardware and will not
 write to it. Two independent projects agreeing on a protocol is enough to
-implement a headset; it is not enough to send one a command nobody has ever
+implement a device; it is not enough to send one a command nobody has ever
 seen it answer. If you own one and the readings match what it reports
 elsewhere, say so in an issue and the controls are turned on.
 
-Other headsets are not supported yet, and will not be added on guesswork — see
+A headset and a mouse are held open at the same time, and the sidebar switches
+between them. Each keeps its own settings and its own battery reading; a device
+that stops answering is let go without disturbing the other.
+
+Other hardware is not supported yet, and will not be added on guesswork — see
 [Adding a device](#adding-a-device).
 
 ## Install
@@ -63,16 +69,16 @@ and is built on Arch, where a rolling library set is the point.
 ### Debian, Ubuntu, Mint, Pop!_OS
 
 ```bash
-sudo apt install ./headset-control-center_0.4.1_amd64.deb
+sudo apt install ./gear-control-center_0.5.0_amd64.deb
 ```
 
-Installs the application, a desktop entry, the icons and the `headsetctl`
-command. Removing it later is `sudo apt remove headset-control-center`.
+Installs the application, a desktop entry, the icons and the `gearctl`
+command. Removing it later is `sudo apt remove gear-control-center`.
 
 ### Fedora, RHEL, openSUSE
 
 ```bash
-sudo dnf install ./headset-control-center-0.4.1-1.x86_64.rpm
+sudo dnf install ./gear-control-center-0.5.0-1.x86_64.rpm
 ```
 
 ### AppImage — any distribution
@@ -80,25 +86,25 @@ sudo dnf install ./headset-control-center-0.4.1-1.x86_64.rpm
 Nothing is installed; the file is the application.
 
 ```bash
-chmod +x headset-control-center_0.4.1_amd64.AppImage
-./headset-control-center_0.4.1_amd64.AppImage
+chmod +x gear-control-center_0.5.0_amd64.AppImage
+./gear-control-center_0.5.0_amd64.AppImage
 ```
 
 ### Arch Linux and derivatives
 
 Build it. A `PKGBUILD` lives in [`packaging/aur`](packaging/aur); it builds from
-the tagged release and installs the binary, the `headsetctl` command, a desktop
+the tagged release and installs the binary, the `gearctl` command, a desktop
 entry and the icons:
 
 ```bash
-git clone https://github.com/debbiedi/headset-control-center.git
-cd headset-control-center/packaging/aur
+git clone https://github.com/debbiedi/gear-control-center.git
+cd gear-control-center/packaging/aur
 makepkg -si
 ```
 
 `makepkg -s` pulls the build dependencies (`rust`, `nodejs`, `npm`) and `-i`
 installs the finished package, so this is the whole procedure. Removing it
-later is `sudo pacman -R headset-control-center`.
+later is `sudo pacman -R gear-control-center`.
 
 Every runtime dependency is in the official repositories — this is the
 distribution the application was developed and tested on.
@@ -136,7 +142,7 @@ It copies the tracked files into a temporary tree, so it will not touch a
   PulseAudio both work, since the application drives the device's own hardware
   mixer rather than a software one
 * **No udev rule on a current distribution.** Most ship one that already grants
-  the logged-in user access to headset HID devices. If yours does not, see
+  the logged-in user access to these HID devices. If yours does not, see
   [docs/hardware.md](docs/hardware.md).
 * **No root, ever.** If something asks you for a password to run this, it is
   not this.
@@ -157,6 +163,22 @@ It copies the tracked files into a temporary tree, so it will not touch a
   them back, so what you set is kept here and re-sent — after a restart, a
   power cycle, a replug — rather than assumed to have survived
 * Profiles, stored locally and applied setting by setting
+
+For a mouse:
+
+* Up to five resolution presets, snapped to the steps the sensor actually has
+  and reported back snapped — the window never shows a figure the mouse is not
+  set to
+* Report rate, 125 to 1000 Hz
+* Per-zone lighting with a rainbow effect, a colour flashed on click, and a dim
+  timer
+* Sleep timer, the same control a headset's auto shut-off uses
+* Saving all of it to the mouse's own memory, on a button rather than on every
+  drag — that writes to flash
+
+A headset and a mouse are held open together, each with its own battery reading
+and its own record of what it was sent.
+
 * System tray with battery and both mutes, start with the system, low battery
   warning
 * A diagnostics report for bug reports
@@ -170,24 +192,29 @@ It copies the tracked files into a temporary tree, so it will not touch a
 
 ### What it deliberately does not do
 
-No RGB (the hardware has none). No firmware updating (there is no documented
-update path, and a firmware writer built on guesswork is how headsets die). No
-microphone noise reduction, gate or compressor — doing that in software and
-calling it a device feature would be a lie. No onboard profiles, no volume
-limiter.
+No firmware updating (there is no documented update path, and a firmware writer
+built on guesswork is how hardware dies). No microphone noise reduction, gate
+or compressor — doing that in software and calling it a device feature would be
+a lie. No volume limiter. No button remapping yet, though the mouse documents a
+command for it. Profiles cover a headset's settings and not a mouse's, so the
+Profiles section is hidden while a mouse is selected rather than shown half
+working.
+
+RGB is driven where the hardware has it — the Aerox has three zones, the Arctis
+has none, and each device says which it is.
 
 Each of these appears in the application marked as unsupported, rather than
 being quietly missing.
 
 ## From the shell
 
-`headsetctl` reads the same device layer the window does. Only one process can
-hold the headset's control interface, so it asks a running window over a local
+`gearctl` reads the same device layer the window does. Only one process can
+hold a device's control interface, so it asks a running window over a local
 socket when there is one and opens the device itself when there is not — you do
 not have to know which.
 
 ```console
-$ headsetctl
+$ gearctl
 SteelSeries Arctis 7+
   Power       on
   Battery     75%
@@ -198,9 +225,9 @@ SteelSeries Arctis 7+
   Auto-off    10 min
   EQ preset   1
 
-$ headsetctl set sidetone 2
-$ headsetctl set mic-mute 1
-$ headsetctl --json | jq .battery_percent
+$ gearctl set sidetone 2
+$ gearctl set mic-mute 1
+$ gearctl --json | jq .battery_percent
 75
 ```
 
@@ -208,19 +235,19 @@ A value the device would refuse is refused here too, with the device's own
 reason and a non-zero exit status.
 
 It arrives with the `.deb` and the `.rpm`. The AppImage carries a copy too,
-which `--appimage-extract` will unpack to `squashfs-root/usr/bin/headsetctl`
+which `--appimage-extract` will unpack to `squashfs-root/usr/bin/gearctl`
 if you would rather not install anything.
 
 ### Waybar
 
-`headsetctl --waybar` prints exactly what a `custom` module expects:
+`gearctl --waybar` prints exactly what a `custom` module expects:
 
 ```jsonc
 "custom/headset": {
-  "exec": "headsetctl --waybar",
+  "exec": "gearctl --waybar",
   "return-type": "json",
   "interval": 30,
-  "on-click": "headset-control-center"
+  "on-click": "gear-control-center"
 }
 ```
 
@@ -245,8 +272,8 @@ of someone who does not read English. The procedure is in
 ## Build from source
 
 ```bash
-git clone https://github.com/debbiedi/headset-control-center.git
-cd headset-control-center
+git clone https://github.com/debbiedi/gear-control-center.git
+cd gear-control-center
 npm install
 npm run tauri dev
 ```

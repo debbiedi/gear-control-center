@@ -37,6 +37,32 @@ export interface InactiveTimeSupport {
   max_minutes: number;
 }
 
+/**
+ * Sensor resolutions a pointing device accepts.
+ *
+ * A list rather than a range: the sensor quantises, so a smooth slider would
+ * promise a precision the hardware does not have. The UI snaps to these.
+ */
+export interface DpiSupport {
+  values: number[];
+  max_presets: number;
+}
+
+export interface PollingRateSupport {
+  /** Report rates in Hz. */
+  rates: number[];
+}
+
+export interface LightingSupport {
+  /** LED names in the order the device addresses them. */
+  zones: string[];
+  effects: string[];
+  reactive: boolean;
+}
+
+/** An RGB triple, 0-255 per channel. */
+export type Rgb = [number, number, number];
+
 export interface Capabilities {
   volume: boolean;
   mute: boolean;
@@ -52,7 +78,13 @@ export interface Capabilities {
   battery: BatterySupport | null;
   sidetone: SidetoneSupport | null;
   equalizer: EqualizerSupport | null;
+  /** Shared: a headset's auto shut-off and a mouse's sleep timer are one idea. */
   inactive_time: InactiveTimeSupport | null;
+  dpi: DpiSupport | null;
+  polling_rate: PollingRateSupport | null;
+  lighting: LightingSupport | null;
+  /** Whether the device can be told to keep its settings through a power cycle. */
+  onboard_memory: boolean;
 }
 
 export interface DeviceInfo {
@@ -82,6 +114,22 @@ export interface ChatMixState {
   chat: number;
 }
 
+/**
+ * Where the lighting stands.
+ *
+ * Every field is what this application last sent: the device answers no read
+ * command for its lighting, so before anything is sent this is absent rather
+ * than filled with the factory defaults as if they had been observed.
+ */
+export interface LightingState {
+  /** One RGB triple per zone, in `LightingSupport.zones` order. */
+  colors: Rgb[];
+  /** Index into `LightingSupport.effects`. */
+  effect: number | null;
+  reactive_color: Rgb | null;
+  dim_seconds: number | null;
+}
+
 export interface DeviceState {
   connection: ConnectionState;
   powered_on: boolean;
@@ -91,6 +139,10 @@ export interface DeviceState {
   inactive_minutes: number | null;
   equalizer_db: number[] | null;
   equalizer_preset: number | null;
+  dpi_presets: number[] | null;
+  dpi_active: number | null;
+  polling_rate: number | null;
+  lighting: LightingState | null;
 }
 
 export interface DiscoveredDevice {
@@ -135,6 +187,21 @@ export interface AudioState {
   capture: MixerControl | null;
 }
 
+/**
+ * One line about an open device, for the sidebar.
+ *
+ * Deliberately small: it is published on every pass, beside the full record of
+ * whichever device is selected.
+ */
+export interface DeviceSummary {
+  id: string;
+  name: string;
+  connection: ConnectionState;
+  battery: BatteryState | null;
+  poweredOn: boolean;
+  verified: boolean;
+}
+
 export interface Snapshot {
   connection: ConnectionState;
   mockMode: boolean;
@@ -147,6 +214,38 @@ export interface Snapshot {
   audioError: DeviceError | null;
   /** Whether the virtual game and chat outputs are currently in place. */
   chatmixRouting: boolean;
+  /**
+   * Every open device. The fields above describe the selected one; this is the
+   * list the sidebar offers.
+   */
+  devices: DeviceSummary[];
+  selected: string | null;
+}
+
+/** `#rrggbb`, which is what an `<input type="color">` speaks. */
+export function rgbToHex([r, g, b]: Rgb): string {
+  return `#${[r, g, b].map((c) => c.toString(16).padStart(2, "0")).join("")}`;
+}
+
+export function hexToRgb(hex: string): Rgb {
+  const value = hex.replace("#", "");
+  return [
+    parseInt(value.slice(0, 2), 16),
+    parseInt(value.slice(2, 4), 16),
+    parseInt(value.slice(4, 6), 16),
+  ];
+}
+
+/**
+ * The resolution nearest to `cpi` that the sensor actually has.
+ *
+ * The same rounding the native layer applies, so a slider shows where it will
+ * land before it is let go rather than jumping afterwards.
+ */
+export function nearestDpi(values: number[], cpi: number): number {
+  return values.reduce((best, v) =>
+    Math.abs(v - cpi) <= Math.abs(best - cpi) ? v : best,
+  );
 }
 
 export function mixerPercent(c: MixerControl): number {

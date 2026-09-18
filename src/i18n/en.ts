@@ -18,7 +18,7 @@ export const en = {
   },
 
   app: {
-    name: "Headset Control Center",
+    name: "Gear Control Center",
     tagline: "Local · Open hardware",
     sections: "Sections",
     connection: "Connection",
@@ -29,6 +29,8 @@ export const en = {
   },
 
   nav: {
+    sensor: "Sensor",
+    lighting: "Lighting",
     dashboard: "Dashboard",
     audio: "Audio",
     microphone: "Microphone",
@@ -105,8 +107,9 @@ export const en = {
     lowChargeSoon: "Low — charge soon",
     runningOnBattery: "Running on battery",
     batteryResolution: (levels: number) =>
-      `The headset reports ${levels} levels rather than a percentage, so this figure moves in steps. It is what the device sent, not an estimate.`,
-    batteryOff: "The headset is switched off, so it is not reporting a battery level.",
+      `This device reports ${levels} levels rather than a percentage, so this figure moves in steps. It is what the device sent, not an estimate.`,
+    batteryOff:
+      "The device is not reporting a battery level — it is switched off or asleep.",
     batteryUnsupported: "This device does not report a battery level.",
 
     mixLegend: "Mix",
@@ -132,7 +135,7 @@ export const en = {
     notReadBack: "Not read back",
     notSupported: "Not supported",
     notReadBackExplain:
-      '"Not read back" means the headset accepts the setting but offers no way to ask for its current value. This build shows what it was told, and shows nothing after a reconnect rather than guessing.',
+      '"Not read back" means the device accepts the setting but offers no way to ask for its current value. This build shows what it was told, and shows nothing after a reconnect rather than guessing.',
   },
 
   audio: {
@@ -387,7 +390,7 @@ export const en = {
       "Shown once as the level drops past the threshold, not repeatedly.",
     threshold: "Threshold",
     thresholdNote:
-      "Only these two are offered because the headset reports five levels — 0, 25, 50, 75 and 100 per cent. A threshold of 30% would be waiting for a number the device never sends.",
+      "Only these two are offered because they are the levels every supported device can report: a headset reports five — 0, 25, 50, 75 and 100 per cent — and a mouse reports in steps of five. A threshold of 30% would be waiting for a number a headset never sends.",
 
     developmentLegend: "Development",
     simulatedTitle: "Simulated device",
@@ -421,8 +424,8 @@ export const en = {
 
   capabilities: {
     batteryLevel: "Battery level",
-    batteryLevelDetail: (steps: number) =>
-      `${steps} discrete levels (0 / 25 / 50 / 75 / 100%)`,
+    batteryLevelDetail: (steps: number, apart: number) =>
+      `${steps} discrete levels, ${apart}% apart`,
     batteryLevelAbsent: "Not reported by this device",
     chargingState: "Charging state",
     chargingStateDetail: "Reported while the cable is attached",
@@ -461,6 +464,19 @@ export const en = {
       "The headset cannot store profiles, so there is nothing to save to it",
     firmware: "Firmware update",
     firmwareAbsent: "No documented update path for this device",
+    dpi: "Sensor resolution",
+    dpiDetail: (count: number, min: number, max: number) =>
+      `${count} steps, ${min}-${max} CPI`,
+    dpiAbsent: "This device has no sensor",
+    pollingRate: "Report rate",
+    pollingRateDetail: (rates: string) => `${rates}`,
+    pollingRateAbsent: "Not adjustable on this device",
+    lightingZones: "Lighting zones",
+    lightingZonesDetail: (zones: string) => zones,
+    lightingZonesAbsent: "No addressable zones",
+    onboardMemory: "Onboard memory",
+    onboardMemoryDetail: "Settings can be written to the device itself",
+    onboardMemoryAbsent: "The device stores nothing of its own",
     rgb: "RGB lighting",
     rgbAbsent: "This headset has no addressable lighting",
     spatial: "Spatial audio",
@@ -478,7 +494,62 @@ export const en = {
    * normalised key and fall back to the raw string, so a device with terms
    * nobody has translated yet still shows something true.
    */
+  devices: {
+    title: "Devices",
+    readOnly: "Read-only",
+    off: "Off",
+    noReading: "No reading",
+  },
+
+  sensor: {
+    title: "Sensor",
+    lede: "The resolutions this mouse steps through, and how often it reports.",
+    presets: "Resolution presets",
+    presetsHint: (max: number) =>
+      `Up to ${max}. The button under the mouse steps through them in order.`,
+    preset: (n: number) => `Preset ${n}`,
+    selected: "Selected",
+    select: "Select this preset",
+    add: "Add a preset",
+    remove: "Remove",
+    cpi: "CPI",
+    snapped: (cpi: number) => `Nearest the sensor has: ${cpi} CPI`,
+    reportRate: "Report rate",
+    reportRateHint: "How often the mouse reports its position. Higher costs battery.",
+    hz: (n: number) => `${n} Hz`,
+    sleepTimer: "Sleep timer",
+    sleepTimerHint: (max: number) =>
+      `Idle minutes before the mouse powers itself down. Up to ${max}.`,
+    never: "Never",
+    minutes: (n: number) => `${n} min`,
+    save: "Save to the mouse",
+    saveHint:
+      "These are re-sent whenever the mouse wakes. Saving also puts them in the mouse's own memory, so they survive without this application running.",
+    saved: "Saved to the device",
+    absent: "The selected device has no sensor to configure.",
+  },
+
+  lighting: {
+    title: "Lighting",
+    lede: "Three LEDs along the shell of the mouse.",
+    effect: "Effect",
+    effectHint:
+      "Setting a colour is what stops the rainbow — the device has no separate command for it.",
+    zones: "Zone colours",
+    reactive: "Flash on click",
+    reactiveHint: "A colour shown briefly each time a button is pressed.",
+    reactiveOff: "Off",
+    dim: "Dim after",
+    dimHint: "Idle seconds before the lighting fades. Zero never dims.",
+    seconds: (n: number) => `${n} s`,
+    absent: "The selected device has no addressable lighting.",
+  },
   terms: {
+    top: "Top",
+    middle: "Middle",
+    bottom: "Bottom",
+    static: "Static",
+    rainbow: "Rainbow",
     off: "Off",
     low: "Low",
     medium: "Medium",
@@ -503,6 +574,11 @@ export const en = {
   },
 
   actions: {
+    settingResolution: "Setting the resolution",
+    settingReportRate: "Setting the report rate",
+    settingLighting: "Setting the lighting",
+    savingToDevice: "Saving to the device",
+    switchingDevice: "Switching device",
     settingVolume: "Setting the volume",
     changingMute: "Changing mute",
     settingMicLevel: "Setting the microphone level",
@@ -532,7 +608,7 @@ export const en = {
     unmuteOutput: "Unmute output",
     muteMicrophone: "Mute microphone",
     unmuteMicrophone: "Unmute microphone",
-    open: "Open Headset Control Center",
+    open: "Open Gear Control Center",
     quit: "Quit",
     lowBatteryTitle: "{device} battery is low",
     lowBatteryBody: "{percent}% remaining.",

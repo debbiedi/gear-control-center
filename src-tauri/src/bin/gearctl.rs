@@ -8,17 +8,17 @@
 use std::io::{BufRead, BufReader, Write};
 use std::os::unix::net::UnixStream;
 
-use headset_cc_lib::commands::{build_snapshot, AppState};
-use headset_cc_lib::system::ipc::{self, Summary};
+use gear_cc_lib::commands::{build_snapshot, AppState};
+use gear_cc_lib::system::ipc::{self, Summary};
 
 const USAGE: &str = "\
-headsetctl — control a supported headset from the shell
+gearctl — control a supported headset from the shell
 
-  headsetctl                     what the headset is doing
-  headsetctl --json              the same as one JSON object
-  headsetctl --waybar            a Waybar custom module object
-  headsetctl set <name> <value>  change one setting
-  headsetctl watch               print a line whenever something changes
+  gearctl                     what the headset is doing
+  gearctl --json              the same as one JSON object
+  gearctl --waybar            a Waybar custom module object
+  gearctl set <name> <value>  change one setting
+  gearctl watch               print a line whenever something changes
 
 Settings: sidetone 0-3 · volume · mic · mute 0|1 · mic-mute 0|1
           auto-off <minutes> · eq-preset <index>
@@ -46,8 +46,11 @@ impl Running {
 
 fn summary_directly() -> Summary {
     let state = AppState::new();
-    // A device that will not open is not an error here: the snapshot says so.
-    let _ = state.devices.lock().connect(None);
+    // Everything on the bus, not the first thing on it: a mouse and a headset
+    // are both present and a script asking about one should not have to guess
+    // which happened to enumerate first. A device that will not open is not an
+    // error here — the snapshot says so.
+    state.devices.lock().open_all();
     Summary::from(&build_snapshot(&state))
 }
 
@@ -140,6 +143,26 @@ fn describe(summary: &Summary) -> String {
     if summary.chatmix_routing {
         out.push_str(&field("Routing", "game and chat outputs in place".into()));
     }
+
+    // The block above describes one device. When a second is open, saying
+    // nothing about it would read as though it were not there — and the
+    // battery somebody ran this to check might be the one left out.
+    let others: Vec<&crate::ipc::DeviceLine> =
+        summary.devices.iter().filter(|d| !d.selected).collect();
+    if !others.is_empty() {
+        out.push_str("\nAlso open\n");
+        for device in others {
+            let reading = match device.battery_percent {
+                Some(percent) => format!(
+                    "{percent}%{}",
+                    if device.charging { " (charging)" } else { "" }
+                ),
+                None if device.powered_on => "battery not reported".into(),
+                None => "off".into(),
+            };
+            out.push_str(&format!("  {:<28}{reading}\n", device.name));
+        }
+    }
     out
 }
 
@@ -172,7 +195,7 @@ fn main() {
         }
         "set" => {
             let (Some(key), Some(raw)) = (args.get(1), args.get(2)) else {
-                eprintln!("set needs a name and a value, for example: headsetctl set sidetone 2");
+                eprintln!("set needs a name and a value, for example: gearctl set sidetone 2");
                 std::process::exit(2);
             };
             match raw.parse::<i64>() {

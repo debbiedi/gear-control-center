@@ -27,7 +27,13 @@ export function capabilityRows(
       label: c.batteryLevel,
       supported: caps.battery !== null,
       detail: caps.battery
-        ? c.batteryLevelDetail(caps.battery.steps)
+        ? c.batteryLevelDetail(
+            caps.battery.steps,
+            // The spacing is the resolution: five levels are 25% apart and
+            // twenty-one are 5%, and saying "five levels" without it invites
+            // the reader to assume the wrong one.
+            Math.round(100 / Math.max(1, caps.battery.steps - 1)),
+          )
         : c.batteryLevelAbsent,
     },
     {
@@ -110,9 +116,45 @@ export function capabilityRows(
       detail: caps.firmware_update ? c.supported : c.firmwareAbsent,
     },
     {
+      label: c.dpi,
+      supported: caps.dpi !== null,
+      detail: caps.dpi
+        ? c.dpiDetail(
+            caps.dpi.values.length,
+            caps.dpi.values[0],
+            caps.dpi.values[caps.dpi.values.length - 1],
+          )
+        : c.dpiAbsent,
+    },
+    {
+      label: c.pollingRate,
+      supported: caps.polling_rate !== null,
+      detail: caps.polling_rate
+        ? c.pollingRateDetail(
+            caps.polling_rate.rates.map((r) => `${r} Hz`).join(" · "),
+          )
+        : c.pollingRateAbsent,
+    },
+    {
       label: c.rgb,
       supported: caps.rgb,
       detail: caps.rgb ? c.supported : c.rgbAbsent,
+    },
+    {
+      label: c.lightingZones,
+      supported: caps.lighting !== null,
+      detail: caps.lighting
+        ? c.lightingZonesDetail(
+            caps.lighting.zones.map((z) => term(z, t)).join(" · "),
+          )
+        : c.lightingZonesAbsent,
+    },
+    {
+      label: c.onboardMemory,
+      supported: caps.onboard_memory,
+      detail: caps.onboard_memory
+        ? c.onboardMemoryDetail
+        : c.onboardMemoryAbsent,
     },
     {
       label: c.spatial,

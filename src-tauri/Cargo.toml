@@ -1,27 +1,27 @@
 [package]
-name = "headset-control-center"
-version = "0.4.1"
-description = "Control and configure supported USB gaming headsets"
+name = "gear-control-center"
+version = "0.5.0"
+description = "Control and configure supported USB gaming headsets and mice"
 authors = ["Kadir Nergiz"]
 license = "MIT"
 edition = "2021"
 rust-version = "1.77.2"
 
 [lib]
-name = "headset_cc_lib"
+name = "gear_cc_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 # Declared explicitly, and in this order, because the Tauri bundler picks the
 # package's first binary target as the application. Left to auto-discovery it
-# picked headsetctl, and shipped a .deb whose desktop entry launched the
+# picked gearctl, and shipped a .deb whose desktop entry launched the
 # command-line tool. Order here is not cosmetic.
 [[bin]]
-name = "headset-control-center"
+name = "gear-control-center"
 path = "src/main.rs"
 
 [[bin]]
-name = "headsetctl"
-path = "src/bin/headsetctl.rs"
+name = "gearctl"
+path = "src/bin/gearctl.rs"
 
 [build-dependencies]
 tauri-build = { version = "2.6.3", features = [] }

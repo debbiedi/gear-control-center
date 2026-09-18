@@ -5,20 +5,52 @@
 //! before a control is wired to it — a claim about the headset should be
 //! reproducible from a terminal, not only visible in a screenshot.
 //!
-//!     cargo run --example probe                  # read once
+//! Every device on the bus is opened, and a command acts on the one named by
+//! `--device`, or on the first one otherwise. That mirrors the application:
+//! a headset and a mouse are both held, and a command has to be aimed.
+//!
+//!     cargo run --example probe                  # read every device once
 //!     cargo run --example probe -- watch         # read every second
 //!     cargo run --example probe -- sidetone 2
 //!     cargo run --example probe -- inactive 60
 //!     cargo run --example probe -- preset 1
 //!     cargo run --example probe -- eq 6 4 2 0 0 0 0 0 0 0
+//!
+//! Pointing devices, which need `--device` when a headset is also plugged in:
+//!
+//!     cargo run --example probe -- --device 1038:1838 dpi 400 800 1600
+//!     cargo run --example probe -- --device 1038:1838 polling 1000
+//!     cargo run --example probe -- --device 1038:1838 color 0 ff0000
+//!     cargo run --example probe -- --device 1038:1838 effect 1
+//!     cargo run --example probe -- --device 1038:1838 reactive off
+//!     cargo run --example probe -- --device 1038:1838 dim 30
+//!     cargo run --example probe -- --device 1038:1838 save
 
-use headset_cc_lib::audio::chatmix::ChatMixRouting;
-use headset_cc_lib::audio::AudioController;
-use headset_cc_lib::device::DeviceManager;
+use gear_cc_lib::audio::chatmix::ChatMixRouting;
+use gear_cc_lib::audio::AudioController;
+use gear_cc_lib::device::DeviceManager;
 use std::{thread, time::Duration};
 
+/// A colour as `rrggbb`, or `off`.
+fn colour(text: &str) -> Option<[u8; 3]> {
+    if text.eq_ignore_ascii_case("off") {
+        return None;
+    }
+    let hex = text.trim_start_matches('#');
+    let byte = |i: usize| u8::from_str_radix(&hex[i..i + 2], 16).expect("two hex digits");
+    Some([byte(0), byte(2), byte(4)])
+}
+
 fn main() {
-    let args: Vec<String> = std::env::args().skip(1).collect();
+    let mut args: Vec<String> = std::env::args().skip(1).collect();
+
+    // `--device <id>` picks which of the open devices a command is aimed at.
+    let wanted = args.iter().position(|a| a == "--device").map(|at| {
+        let id = args.get(at + 1).expect("--device needs an id").clone();
+        args.drain(at..=at + 1);
+        id
+    });
+
     let mut manager = DeviceManager::new();
 
     let found = manager.discover();
@@ -36,10 +68,25 @@ fn main() {
         return;
     }
 
-    match manager.connect(None) {
-        Ok(info) => println!("connected: {} ({})\n", info.name, info.connection),
-        Err(e) => {
-            println!("connect failed: {e}");
+    // Everything at once, as the application does — then aim.
+    let opened = manager.open_all();
+    println!("\nopened {} device(s):", opened.len());
+    for info in &opened {
+        println!("  {} ({})", info.name, info.id);
+    }
+    if let Some(id) = &wanted {
+        match manager.select(id) {
+            Ok(info) => println!("\naimed at {} ({})", info.name, info.id),
+            Err(e) => {
+                println!("\ncannot aim at {id}: {e}");
+                return;
+            }
+        }
+    }
+    match manager.info() {
+        Some(info) => println!("selected: {} ({})\n", info.name, info.connection),
+        None => {
+            println!("nothing could be opened");
             return;
         }
     }
@@ -124,6 +171,46 @@ fn main() {
                 other => Ok(format!("unknown chatmix argument: {other:?}")),
             }
         }
+        "dpi" => {
+            let dpis: Vec<u32> = rest.iter().map(|v| v.parse().expect("CPI")).collect();
+            manager
+                .with_device(|d| d.set_dpi_presets(&dpis, 0))
+                .map(|_| format!("resolutions -> {dpis:?}"))
+        }
+        "polling" => {
+            let hz: u16 = rest[0].parse().expect("Hz");
+            manager
+                .with_device(|d| d.set_polling_rate(hz))
+                .map(|_| format!("report rate -> {hz} Hz"))
+        }
+        "color" | "colour" => {
+            let zone: u8 = rest[0].parse().expect("zone");
+            let rgb = colour(&rest[1]).expect("a colour, not off");
+            manager
+                .with_device(|d| d.set_lighting_color(zone, rgb))
+                .map(|_| format!("zone {zone} -> {rgb:?}"))
+        }
+        "effect" => {
+            let index: u8 = rest[0].parse().expect("index");
+            manager
+                .with_device(|d| d.set_lighting_effect(index))
+                .map(|_| format!("lighting effect -> {index}"))
+        }
+        "reactive" => {
+            let rgb = colour(&rest[0]);
+            manager
+                .with_device(|d| d.set_reactive_color(rgb))
+                .map(|_| format!("reactive colour -> {rgb:?}"))
+        }
+        "dim" => {
+            let seconds: u16 = rest[0].parse().expect("seconds");
+            manager
+                .with_device(|d| d.set_dim_timer(seconds))
+                .map(|_| format!("dim timer -> {seconds} s"))
+        }
+        "save" => manager
+            .with_device(|d| d.save_to_device())
+            .map(|_| "settings committed to the device".to_string()),
         "watch" | "read" => Ok(String::new()),
         other => {
             println!("unknown command: {other}");
@@ -139,12 +226,23 @@ fn main() {
 
     let rounds = if command == "watch" { 60 } else { 1 };
     for i in 0..rounds {
-        match manager.state() {
-            Ok(s) => println!(
-                "[{i:02}] power={} battery={:?} chatmix={:?}",
-                s.powered_on, s.battery, s.chatmix
-            ),
-            Err(e) => println!("[{i:02}] read failed: {e}"),
+        // Every open device, because this is also how "two at once" is checked.
+        for reading in manager.read_all() {
+            match (&reading.state, &reading.state_error) {
+                (Some(s), _) => println!(
+                    "[{i:02}] {:<30} power={} battery={:?} chatmix={:?} dpi={:?} polling={:?}",
+                    reading.info.name,
+                    s.powered_on,
+                    s.battery,
+                    s.chatmix,
+                    s.dpi_presets,
+                    s.polling_rate,
+                ),
+                (None, Some(e)) => {
+                    println!("[{i:02}] {:<30} read failed: {e}", reading.info.name)
+                }
+                (None, None) => {}
+            }
         }
         if command == "watch" {
             thread::sleep(Duration::from_secs(1));

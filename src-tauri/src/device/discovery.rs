@@ -5,6 +5,7 @@
 
 use std::ffi::CString;
 
+use super::devices::aerox3_wireless::{self, Aerox3Wireless};
 use super::devices::arctis_7_plus::{self, Arctis7Plus};
 use super::devices::nova::{self, ArctisNova7};
 use super::protocol::DeviceProtocol;
@@ -67,6 +68,33 @@ pub static SUPPORTED: &[SupportedDevice] = &[SupportedDevice {
     verification: Verification::Documented,
     capabilities: nova::capabilities,
     build: |transport, info| Box::new(ArctisNova7::new(transport, info)),
+}, SupportedDevice {
+    vendor_id: aerox3_wireless::VENDOR_ID,
+    product_ids: &aerox3_wireless::PRODUCT_IDS_WIRELESS,
+    name: "SteelSeries Aerox 3 Wireless",
+    interface: aerox3_wireless::CONTROL_INTERFACE,
+    usage_page: aerox3_wireless::CONTROL_USAGE_PAGE,
+    usage: aerox3_wireless::CONTROL_USAGE,
+    // Run against the hardware: the battery command was sent to a physical
+    // mouse and its answer matched rivalcfg's reading of the same device.
+    verification: Verification::Verified,
+    capabilities: aerox3_wireless::capabilities,
+    build: |transport, info| Box::new(Aerox3Wireless::new(transport, info)),
+}, SupportedDevice {
+    vendor_id: aerox3_wireless::VENDOR_ID,
+    product_ids: &aerox3_wireless::PRODUCT_IDS_WIRED,
+    name: "SteelSeries Aerox 3 Wireless (wired)",
+    interface: aerox3_wireless::CONTROL_INTERFACE,
+    usage_page: aerox3_wireless::CONTROL_USAGE_PAGE,
+    usage: aerox3_wireless::CONTROL_USAGE,
+    // The same mouse on its cable, which is a different product id and a
+    // different command encoding. Implemented from the same source, but nobody
+    // has run it with the cable in, so it reads and does not write. Listing it
+    // is still the point: without it the mouse vanishes from the application
+    // the moment it is put on charge.
+    verification: Verification::Documented,
+    capabilities: aerox3_wireless::capabilities,
+    build: |transport, info| Box::new(Aerox3Wireless::new(transport, info)),
 }];
 
 fn lookup(vendor_id: u16, product_id: u16) -> Option<&'static SupportedDevice> {
@@ -176,10 +204,44 @@ mod tests {
     }
 
     #[test]
-    fn unrelated_steelseries_hardware_is_not_claimed() {
-        // The Aerox 3 mouse shares the vendor id and must not be picked up.
-        assert!(lookup(0x1038, 0x183a).is_none());
+    fn unrelated_hardware_is_not_claimed() {
+        // Sharing a vendor id is not enough. The Aerox 5 is a SteelSeries
+        // mouse this application has never been run against.
+        assert!(lookup(0x1038, 0x1850).is_none(), "Aerox 5");
         assert!(lookup(0x046d, 0xc336).is_none(), "Logitech keyboard");
+    }
+
+    #[test]
+    fn the_mouse_is_recognised_on_the_radio_and_on_the_cable() {
+        // Two product ids for one piece of hardware: it changes identity when
+        // it is plugged in to charge, and it has to stay in the list when it
+        // does.
+        for pid in aerox3_wireless::PRODUCT_IDS_WIRELESS {
+            let entry = lookup(0x1038, pid).expect("wireless");
+            assert!(entry.verification.is_verified());
+        }
+        for pid in aerox3_wireless::PRODUCT_IDS_WIRED {
+            let entry = lookup(0x1038, pid).expect("wired");
+            assert!(
+                !entry.verification.is_verified(),
+                "the cable half has not been run against hardware"
+            );
+        }
+    }
+
+    #[test]
+    fn a_headset_and_a_mouse_are_separate_entries_with_separate_ids() {
+        // They share a vendor, a control interface number and a usage page.
+        // Only the product id tells them apart, so that is what must decide.
+        let headset = lookup(0x1038, arctis_7_plus::PRODUCT_IDS[0]).unwrap();
+        let mouse = lookup(0x1038, aerox3_wireless::PRODUCT_IDS_WIRELESS[0]).unwrap();
+        assert_ne!(headset.name, mouse.name);
+        assert!((headset.capabilities)(arctis_7_plus::PRODUCT_IDS[0]).dpi.is_none());
+        assert!(
+            (mouse.capabilities)(aerox3_wireless::PRODUCT_IDS_WIRELESS[0])
+                .equalizer
+                .is_none()
+        );
     }
 
     #[test]

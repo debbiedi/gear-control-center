@@ -68,7 +68,7 @@ impl Default for ProfileStore {
 
 pub const FILE: &str = "profiles.json";
 
-/// `$XDG_CONFIG_HOME/headset-control-center/profiles.json`, or the usual
+/// `$XDG_CONFIG_HOME/gear-control-center/profiles.json`, or the usual
 /// `~/.config` fallback.
 pub fn config_path() -> PathBuf {
     crate::storage::path_for(FILE)

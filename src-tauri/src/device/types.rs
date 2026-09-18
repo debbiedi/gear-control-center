@@ -56,6 +56,40 @@ pub struct InactiveTimeSupport {
     pub max_minutes: u8,
 }
 
+/// Sensor resolutions a pointing device accepts.
+///
+/// A list rather than a range because the sensor quantises: the TrueMove Air
+/// takes 100 CPI steps but not every one of them maps to a distinct value, so
+/// offering a smooth 100-18000 slider would promise a precision the hardware
+/// does not have. The UI snaps to these.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DpiSupport {
+    /// Every resolution the sensor will take, ascending, in CPI.
+    pub values: Vec<u32>,
+    /// How many presets the device stores and cycles through with its button.
+    pub max_presets: u8,
+}
+
+/// Report rates a device accepts, in Hz.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct PollingRateSupport {
+    pub rates: Vec<u16>,
+}
+
+/// Addressable lighting.
+///
+/// `zones` names each LED in the order the device addresses them, so the UI
+/// can label the controls with what the owner actually sees on the device
+/// rather than "Zone 1".
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct LightingSupport {
+    pub zones: Vec<String>,
+    /// Effects the device can be left running, in the order it numbers them.
+    pub effects: Vec<String>,
+    /// Whether the device can flash a colour on a button press.
+    pub reactive: bool,
+}
+
 /// What a given device can actually do.
 ///
 /// Absent capabilities are `false`/`None` and the UI hides or explicitly
@@ -79,7 +113,16 @@ pub struct Capabilities {
     pub battery: Option<BatterySupport>,
     pub sidetone: Option<SidetoneSupport>,
     pub equalizer: Option<EqualizerSupport>,
+    /// Shared with headsets: both families call it "go to sleep after N idle
+    /// minutes", so there is one capability rather than two names for it.
     pub inactive_time: Option<InactiveTimeSupport>,
+    pub dpi: Option<DpiSupport>,
+    pub polling_rate: Option<PollingRateSupport>,
+    pub lighting: Option<LightingSupport>,
+    /// True when the device can be told to keep its current settings through a
+    /// power cycle. Not the same as `onboard_profiles`: there is one set of
+    /// settings, not a set of named ones.
+    pub onboard_memory: bool,
 }
 
 impl Capabilities {
@@ -102,6 +145,10 @@ impl Capabilities {
             sidetone: None,
             equalizer: None,
             inactive_time: None,
+            dpi: None,
+            polling_rate: None,
+            lighting: None,
+            onboard_memory: false,
         }
     }
 }
@@ -142,6 +189,24 @@ pub struct ChatMixState {
     pub chat: u8,
 }
 
+/// Where the lighting currently stands.
+///
+/// Every field is what this application last sent. The Aerox answers no
+/// read command for its lighting, so there is nothing else to report — and
+/// reporting the device's factory defaults as if they were live would be a
+/// guess. Before anything is sent, this is absent rather than invented.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct LightingState {
+    /// One RGB triple per zone, in the order [`LightingSupport::zones`] names.
+    pub colors: Vec<[u8; 3]>,
+    /// Index into [`LightingSupport::effects`].
+    pub effect: Option<u8>,
+    /// Colour flashed on a button press, or `None` when reactive is off.
+    pub reactive_color: Option<[u8; 3]>,
+    /// Idle seconds before the lighting dims. 0 disables dimming.
+    pub dim_seconds: Option<u16>,
+}
+
 /// Everything that can change while a device stays connected.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct DeviceState {
@@ -154,12 +219,19 @@ pub struct DeviceState {
     pub inactive_minutes: Option<u8>,
     pub equalizer_db: Option<Vec<f32>>,
     pub equalizer_preset: Option<u8>,
+    /// The resolutions the device is set to cycle through, in CPI.
+    pub dpi_presets: Option<Vec<u32>>,
+    /// Which of those is selected, as an index into `dpi_presets`.
+    pub dpi_active: Option<u8>,
+    pub polling_rate: Option<u16>,
+    pub lighting: Option<LightingState>,
 }
 
 /// What has been sent to a device that it will not report back.
 ///
 /// Sidetone, the auto shut-off timer and the equaliser have no read command
-/// on any supported headset. The only record of them is the record of what
+/// on any supported headset, and neither do a mouse's resolution, report rate
+/// or lighting. The only record of them is the record of what
 /// was sent — so that is what is kept, and sent again when the headset comes
 /// back, rather than assumed to have survived the power cycle.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
@@ -169,6 +241,10 @@ pub struct Sent {
     pub inactive_minutes: Option<u8>,
     pub equalizer_db: Option<Vec<f32>>,
     pub equalizer_preset: Option<u8>,
+    pub dpi_presets: Option<Vec<u32>>,
+    pub dpi_active: Option<u8>,
+    pub polling_rate: Option<u16>,
+    pub lighting: Option<LightingState>,
 }
 
 impl Sent {
@@ -188,6 +264,10 @@ impl DeviceState {
             inactive_minutes: None,
             equalizer_db: None,
             equalizer_preset: None,
+            dpi_presets: None,
+            dpi_active: None,
+            polling_rate: None,
+            lighting: None,
         }
     }
 }

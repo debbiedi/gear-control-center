@@ -1,5 +1,5 @@
 {
-  "name": "headset-cc",
+  "name": "gear-cc",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "test": "vitest run",
-    "build:cli": "cargo build --release --bin headsetctl --manifest-path src-tauri/Cargo.toml"
+    "build:cli": "cargo build --release --bin gearctl --manifest-path src-tauri/Cargo.toml"
   },
   "dependencies": {
     "@fontsource-variable/archivo": "^5.3.0",

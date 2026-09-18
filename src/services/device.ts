@@ -11,6 +11,7 @@ import type {
   DiscoveredDevice,
   ProfileSettings,
   ProfileStore,
+  Rgb,
   Snapshot,
 } from "@/types/device";
 
@@ -40,6 +41,19 @@ export const deviceService = {
     invoke<void>("set_microphone_volume", { value }),
   setMicrophoneMuted: (muted: boolean) =>
     invoke<void>("set_microphone_muted", { muted }),
+
+  setDpiPresets: (dpis: number[], active: number) =>
+    invoke<void>("set_dpi_presets", { dpis, active }),
+  setPollingRate: (hz: number) => invoke<void>("set_polling_rate", { hz }),
+  setLightingColor: (zone: number, rgb: Rgb) =>
+    invoke<void>("set_lighting_color", { zone, rgb }),
+  setLightingEffect: (effect: number) =>
+    invoke<void>("set_lighting_effect", { effect }),
+  setReactiveColor: (rgb: Rgb | null) =>
+    invoke<void>("set_reactive_color", { rgb }),
+  setDimTimer: (seconds: number) => invoke<void>("set_dim_timer", { seconds }),
+  /** Commit the selected device's settings to its own memory. */
+  saveToDevice: () => invoke<void>("save_to_device"),
 
   listProfiles: () => invoke<ProfileStore>("list_profiles"),
   saveProfile: (name: string, settings: ProfileSettings, id?: string) =>

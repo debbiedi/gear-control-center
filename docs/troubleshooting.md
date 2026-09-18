@@ -91,7 +91,7 @@ them is what it sent, and in earlier builds that record lived only in the
 running process: a restart showed "unknown", and a headset that had been
 powered down in between was genuinely back at its own defaults.
 
-They are now kept in `~/.config/headset-control-center/device-memory.json`,
+They are now kept in `~/.config/gear-control-center/device-memory.json`,
 keyed by model, and sent again every time the headset comes on — the log line
 reads `restored sidetone, auto shut-off, equaliser preset on …`. If a value
 still comes back wrong, that line is the first thing to look for: a missing
@@ -101,6 +101,6 @@ the headset refused the command.
 ## Writing a bug report
 
 **Settings → Diagnostics → Write report** produces
-`~/.config/headset-control-center/diagnostics.txt`. It contains device ids,
+`~/.config/gear-control-center/diagnostics.txt`. It contains device ids,
 capabilities, the last readings and your settings — no personal data, and it is
 not sent anywhere.
