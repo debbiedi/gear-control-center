@@ -10,6 +10,9 @@ use crate::device::error::{DeviceError, DeviceResult};
 use crate::device::types::{Capabilities, ConnectionState, DeviceInfo, DeviceState, DiscoveredDevice};
 use crate::device::{DeviceManager, DeviceSummary};
 
+/// Where the interface's tray and notification text is kept between runs.
+const NATIVE_STRINGS_FILE: &str = "native-strings.json";
+
 pub struct AppState {
     pub devices: Mutex<DeviceManager>,
     /// Virtual game and chat outputs. Owned here rather than by the device:
@@ -40,7 +43,11 @@ impl AppState {
             devices: Mutex::new(manager),
             chatmix: Mutex::new(Default::default()),
             settings: Mutex::new(crate::settings::load()),
-            strings: Mutex::new(Default::default()),
+            // Last handed over by the interface. Kept on disk because the tray
+            // outlives the window: started with `--minimised` there is no
+            // window to hand them over, and the English defaults would sit in
+            // the menu of a Turkish desktop for as long as it ran.
+            strings: Mutex::new(crate::storage::load(NATIVE_STRINGS_FILE)),
         }
     }
 }
@@ -576,6 +583,12 @@ pub fn set_native_strings(
     state: State<'_, AppState>,
     strings: crate::system::strings::NativeStrings,
 ) {
+    // Kept so the next start has them before — or without — a window. A write
+    // that fails costs the tray its language on the next run, not this one, so
+    // it is logged rather than reported.
+    if let Err(e) = crate::storage::save(NATIVE_STRINGS_FILE, &strings) {
+        log::warn!("could not keep the tray text: {e}");
+    }
     *state.strings.lock() = strings;
     let snapshot = build_snapshot(&state);
     crate::system::tray::update(&app, &snapshot);
