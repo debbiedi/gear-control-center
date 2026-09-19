@@ -17,6 +17,17 @@ fn has_flag(flag: &str) -> bool {
     std::env::args().any(|a| a == flag)
 }
 
+/// Whether an exit request should be refused.
+///
+/// `code` is `None` when the last window closed and `Some` when something
+/// asked the application to end outright — the tray's Quit, or a signal.
+/// Only the first is what "close to tray" is about. Refusing both made Quit
+/// do nothing at all: it calls `exit`, which arrives back here, and the
+/// setting sent it straight back.
+fn should_stay_running(code: Option<i32>, close_to_tray: bool) -> bool {
+    code.is_none() && close_to_tray
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -95,12 +106,12 @@ pub fn run() {
             // Closing the window does not end the application: the headset
             // goes on being read and the tray entry stays, which is the whole
             // point of the setting. Quitting is done from the tray.
-            tauri::RunEvent::ExitRequested { api, .. } => {
+            tauri::RunEvent::ExitRequested { api, code, .. } => {
                 let close_to_tray = handle
                     .try_state::<AppState>()
                     .map(|s| s.settings.lock().close_to_tray)
                     .unwrap_or(false);
-                if close_to_tray {
+                if should_stay_running(code, close_to_tray) {
                     api.prevent_exit();
                 }
             }
@@ -112,4 +123,24 @@ pub fn run() {
             }
             _ => {}
         });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::should_stay_running;
+
+    #[test]
+    fn closing_the_window_leaves_the_application_running_when_asked_to() {
+        // No code: the last window was closed. That is what the setting means.
+        assert!(should_stay_running(None, true));
+        assert!(!should_stay_running(None, false));
+    }
+
+    #[test]
+    fn quit_ends_the_application_even_with_close_to_tray_on() {
+        // The tray's Quit calls exit(0), which comes back here carrying a code.
+        // Treating it like a closed window made the menu entry do nothing.
+        assert!(!should_stay_running(Some(0), true));
+        assert!(!should_stay_running(Some(1), true));
+    }
 }
