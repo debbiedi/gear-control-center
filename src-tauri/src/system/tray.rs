@@ -4,8 +4,9 @@
 //! headset connected, how much battery is left, and the two mutes. Everything
 //! else stays in the application.
 
+use parking_lot::Mutex;
 use tauri::{
-    menu::{Menu, MenuItem, PredefinedMenuItem},
+    menu::{IsMenuItem, Menu, MenuItem, PredefinedMenuItem},
     tray::TrayIconBuilder,
     AppHandle, Manager, Wry,
 };
@@ -18,8 +19,13 @@ pub const TRAY_ID: &str = "main";
 /// Handles kept so the menu can be rewritten as the device changes — and as
 /// the language changes, which is why even the fixed entries are held here.
 pub struct TrayItems {
-    status: MenuItem<Wry>,
-    battery: MenuItem<Wry>,
+    /// Two lines per open device — its name and its reading — in the order the
+    /// menu shows them. Held behind a lock because, unlike the rest of the
+    /// menu, this part is rebuilt when a device appears or goes away.
+    devices: Mutex<Vec<MenuItem<Wry>>>,
+    /// The device ids those lines belong to, so a rebuild happens when the set
+    /// of devices changes rather than on every reading.
+    device_ids: Mutex<Vec<String>>,
     mute: MenuItem<Wry>,
     microphone: MenuItem<Wry>,
     show: MenuItem<Wry>,
@@ -29,26 +35,15 @@ pub struct TrayItems {
 pub fn create(app: &AppHandle) -> tauri::Result<()> {
     // Disabled entries: readings, not actions.
     let status = MenuItem::with_id(app, "status", "No device detected", false, None::<&str>)?;
-    let battery = MenuItem::with_id(app, "battery", "Battery: —", false, None::<&str>)?;
     let mute = MenuItem::with_id(app, "toggle-mute", "Mute output", true, None::<&str>)?;
     let microphone =
         MenuItem::with_id(app, "toggle-microphone", "Mute microphone", true, None::<&str>)?;
     let show = MenuItem::with_id(app, "show", "Open Gear Control Center", true, None::<&str>)?;
     let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
 
-    let menu = Menu::with_items(
-        app,
-        &[
-            &status,
-            &battery,
-            &PredefinedMenuItem::separator(app)?,
-            &mute,
-            &microphone,
-            &PredefinedMenuItem::separator(app)?,
-            &show,
-            &quit,
-        ],
-    )?;
+    // One placeholder line until the first reading arrives and says what is
+    // actually attached.
+    let menu = compose(app, &[&status], &mute, &microphone, &show, &quit)?;
 
     let mut builder = TrayIconBuilder::with_id(TRAY_ID)
         .menu(&menu)
@@ -71,14 +66,41 @@ pub fn create(app: &AppHandle) -> tauri::Result<()> {
     builder.build(app)?;
 
     app.manage(TrayItems {
-        status,
-        battery,
+        devices: Mutex::new(vec![status]),
+        device_ids: Mutex::new(Vec::new()),
         mute,
         microphone,
         show,
         quit,
     });
     Ok(())
+}
+
+/// Put the menu together: the device lines, then the actions.
+///
+/// Separated out because the device lines are rebuilt while the rest is not,
+/// and both paths have to produce the same shape of menu.
+fn compose(
+    app: &AppHandle,
+    devices: &[&MenuItem<Wry>],
+    mute: &MenuItem<Wry>,
+    microphone: &MenuItem<Wry>,
+    show: &MenuItem<Wry>,
+    quit: &MenuItem<Wry>,
+) -> tauri::Result<Menu<Wry>> {
+    let first = PredefinedMenuItem::separator(app)?;
+    let second = PredefinedMenuItem::separator(app)?;
+    let mut items: Vec<&dyn IsMenuItem<Wry>> = Vec::with_capacity(devices.len() + 5);
+    for device in devices {
+        items.push(*device);
+    }
+    items.push(&first);
+    items.push(mute);
+    items.push(microphone);
+    items.push(&second);
+    items.push(show);
+    items.push(quit);
+    Menu::with_items(app, &items)
 }
 
 /// Bring the window back.
@@ -147,10 +169,18 @@ fn toggle(app: &AppHandle, playback: bool) {
     }
 }
 
+/// One device's two lines in the menu.
+struct DeviceLine {
+    id: String,
+    name: String,
+    battery: String,
+}
+
 /// What the menu should say. Computed anywhere, applied only on the main thread.
 struct TrayView {
-    status: String,
-    battery: String,
+    /// Every open device, the selected one first. Never empty: with nothing
+    /// attached it holds a single line saying so.
+    devices: Vec<DeviceLine>,
     mute: String,
     mute_enabled: bool,
     microphone: String,
@@ -181,8 +211,7 @@ fn apply(app: &AppHandle, view: TrayView) {
     let Some(items) = app.try_state::<TrayItems>() else {
         return;
     };
-    let _ = items.status.set_text(&view.status);
-    let _ = items.battery.set_text(&view.battery);
+    apply_devices(app, &items, &view);
     let _ = items.mute.set_text(&view.mute);
     let _ = items.mute.set_enabled(view.mute_enabled);
     let _ = items.microphone.set_text(&view.microphone);
@@ -194,32 +223,125 @@ fn apply(app: &AppHandle, view: TrayView) {
     }
 }
 
-fn describe(app: &AppHandle, snapshot: &Snapshot) -> Option<TrayView> {
-    let text = app.state::<AppState>().strings.lock().clone();
+/// Put the device lines in the menu.
+///
+/// Rebuilding the menu is only done when the set of devices has changed —
+/// plugging one in, switching one off. A reading that moves from 55% to 50%
+/// rewrites two labels and leaves the menu alone, because rebuilding it a
+/// second is both wasteful and, on GTK, visible.
+fn apply_devices(app: &AppHandle, items: &TrayItems, view: &TrayView) {
+    let ids: Vec<String> = view.devices.iter().map(|d| d.id.clone()).collect();
+    let same_devices = *items.device_ids.lock() == ids;
 
-    let name = snapshot
-        .device
-        .as_ref()
-        .map(|d| d.name.clone())
-        .unwrap_or_else(|| text.no_device.clone());
+    if same_devices {
+        for (line, pair) in view.devices.iter().zip(items.devices.lock().chunks(2)) {
+            if let [name, battery] = pair {
+                let _ = name.set_text(&line.name);
+                let _ = battery.set_text(&line.battery);
+            }
+        }
+        return;
+    }
 
-    let battery = match snapshot.state.as_ref().and_then(|s| s.battery.as_ref()) {
+    let mut built: Vec<MenuItem<Wry>> = Vec::with_capacity(view.devices.len() * 2);
+    for line in &view.devices {
+        // Disabled: these are readings, not actions. Switching device is done
+        // in the window, where there is room to say what each one can do.
+        let name = MenuItem::with_id(app, format!("name-{}", line.id), &line.name, false, None::<&str>);
+        let battery =
+            MenuItem::with_id(app, format!("battery-{}", line.id), &line.battery, false, None::<&str>);
+        match (name, battery) {
+            (Ok(name), Ok(battery)) => {
+                built.push(name);
+                built.push(battery);
+            }
+            _ => {
+                log::warn!("could not build the tray entry for {}", line.name);
+                return;
+            }
+        }
+    }
+
+    let refs: Vec<&MenuItem<Wry>> = built.iter().collect();
+    let menu = match compose(app, &refs, &items.mute, &items.microphone, &items.show, &items.quit) {
+        Ok(menu) => menu,
+        Err(e) => {
+            log::warn!("could not rebuild the tray menu: {e}");
+            return;
+        }
+    };
+    let Some(tray) = app.tray_by_id(TRAY_ID) else {
+        return;
+    };
+    if let Err(e) = tray.set_menu(Some(menu)) {
+        log::warn!("could not install the tray menu: {e}");
+        return;
+    }
+    // Only once the menu is actually in place, so a failed rebuild leaves the
+    // handles pointing at what is still on screen.
+    *items.devices.lock() = built;
+    *items.device_ids.lock() = ids;
+}
+
+/// The device lines, in the order the menu shows them.
+///
+/// Its own function because this is where the menu can quietly go wrong —
+/// listing the devices in whatever order the bus enumerated them, or showing
+/// an empty menu when nothing is attached — and neither needs a window to
+/// test.
+fn device_lines(
+    devices: &[crate::device::DeviceSummary],
+    selected: Option<&str>,
+    text: &crate::system::strings::NativeStrings,
+) -> Vec<DeviceLine> {
+    if devices.is_empty() {
+        return vec![DeviceLine {
+            id: String::new(),
+            name: text.no_device.clone(),
+            battery: text.battery_unknown.clone(),
+        }];
+    }
+
+    let reading = |device: &crate::device::DeviceSummary| match device.battery {
         Some(b) if b.charging => fill(&text.battery_charging, "percent", &b.percent.to_string()),
         Some(b) => fill(&text.battery, "percent", &b.percent.to_string()),
-        None if snapshot.device.is_some() => text.battery_not_reported.clone(),
+        // Powered on but saying nothing is not the same as switched off, and
+        // the two have their own words.
+        None if device.powered_on => text.battery_not_reported.clone(),
         None => text.battery_unknown.clone(),
     };
 
+    // The selected device leads, because it is the one the mutes below act on.
+    // A stable sort, so the rest keep the order they were discovered in.
+    let mut ordered: Vec<&crate::device::DeviceSummary> = devices.iter().collect();
+    ordered.sort_by_key(|d| Some(d.id.as_str()) != selected);
+
+    ordered
+        .iter()
+        .map(|d| DeviceLine {
+            id: d.id.clone(),
+            name: d.name.clone(),
+            battery: reading(d),
+        })
+        .collect()
+}
+
+fn describe(app: &AppHandle, snapshot: &Snapshot) -> Option<TrayView> {
+    let text = app.state::<AppState>().strings.lock().clone();
+    let devices = device_lines(&snapshot.devices, snapshot.selected.as_deref(), &text);
+
     let playback = snapshot.audio.as_ref().and_then(|a| a.playback.as_ref());
     let capture = snapshot.audio.as_ref().and_then(|a| a.capture.as_ref());
-    let tooltip = match snapshot.state.as_ref().and_then(|s| s.battery.as_ref()) {
-        Some(b) => format!("{name} — {}%", b.percent),
-        None => name.clone(),
-    };
+    // Everything, on one line: hovering the icon should not tell you less than
+    // opening the menu would.
+    let tooltip = devices
+        .iter()
+        .map(|d| format!("{} — {}", d.name, d.battery))
+        .collect::<Vec<_>>()
+        .join(" · ");
 
     Some(TrayView {
-        status: name,
-        battery,
+        devices,
         mute: match playback {
             Some(c) if c.muted => text.unmute_output.clone(),
             _ => text.mute_output.clone(),
@@ -234,4 +356,107 @@ fn describe(app: &AppHandle, snapshot: &Snapshot) -> Option<TrayView> {
         quit: text.quit.clone(),
         tooltip,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::device::types::BatteryState;
+    use crate::device::DeviceSummary;
+    use crate::device::types::ConnectionState;
+    use crate::system::strings::NativeStrings;
+
+    fn device(id: &str, name: &str, battery: Option<BatteryState>, on: bool) -> DeviceSummary {
+        DeviceSummary {
+            id: id.into(),
+            name: name.into(),
+            connection: ConnectionState::Connected,
+            battery,
+            powered_on: on,
+            verified: true,
+        }
+    }
+
+    fn charge(percent: u8, charging: bool) -> Option<BatteryState> {
+        Some(BatteryState { percent, charging })
+    }
+
+    #[test]
+    fn every_open_device_gets_a_line() {
+        // The whole point of the change: a mouse beside a headset should not
+        // have to be selected before its battery can be seen.
+        let text = NativeStrings::default();
+        let lines = device_lines(
+            &[
+                device("1038:220e", "Arctis 7+", charge(50, false), true),
+                device("1038:1838", "Aerox 3 Wireless", charge(100, false), true),
+            ],
+            Some("1038:220e"),
+            &text,
+        );
+        assert_eq!(lines.len(), 2);
+        assert_eq!(lines[0].name, "Arctis 7+");
+        assert_eq!(lines[0].battery, "Battery: 50%");
+        assert_eq!(lines[1].name, "Aerox 3 Wireless");
+        assert_eq!(lines[1].battery, "Battery: 100%");
+    }
+
+    #[test]
+    fn the_selected_device_comes_first_whatever_order_the_bus_gave() {
+        // The mutes below act on the selected device, so it has to be the one
+        // at the top — otherwise the menu reads as though they belong to the
+        // device above them.
+        let text = NativeStrings::default();
+        let bus = [
+            device("1038:1838", "Aerox 3 Wireless", charge(100, false), true),
+            device("1038:220e", "Arctis 7+", charge(50, false), true),
+        ];
+        let lines = device_lines(&bus, Some("1038:220e"), &text);
+        assert_eq!(lines[0].name, "Arctis 7+");
+        assert_eq!(lines[1].name, "Aerox 3 Wireless");
+    }
+
+    #[test]
+    fn the_rest_keep_the_order_they_were_found_in() {
+        let text = NativeStrings::default();
+        let bus = [
+            device("a", "First", charge(10, false), true),
+            device("b", "Second", charge(20, false), true),
+            device("c", "Third", charge(30, false), true),
+        ];
+        let lines = device_lines(&bus, Some("c"), &text);
+        let names: Vec<&str> = lines.iter().map(|l| l.name.as_str()).collect();
+        assert_eq!(names, ["Third", "First", "Second"]);
+    }
+
+    #[test]
+    fn nothing_attached_still_says_something() {
+        // An empty menu would look broken; it has to say what it knows.
+        let text = NativeStrings::default();
+        let lines = device_lines(&[], None, &text);
+        assert_eq!(lines.len(), 1);
+        assert_eq!(lines[0].name, text.no_device);
+    }
+
+    #[test]
+    fn a_device_that_is_off_reads_differently_from_one_that_is_silent() {
+        let text = NativeStrings::default();
+        let lines = device_lines(
+            &[
+                device("on", "Awake", None, true),
+                device("off", "Asleep", None, false),
+            ],
+            Some("on"),
+            &text,
+        );
+        assert_eq!(lines[0].battery, text.battery_not_reported);
+        assert_eq!(lines[1].battery, text.battery_unknown);
+    }
+
+    #[test]
+    fn charging_is_said_rather_than_left_to_the_number() {
+        let text = NativeStrings::default();
+        let lines = device_lines(&[device("d", "Charging one", charge(40, true), true)], None, &text);
+        assert!(lines[0].battery.contains("charging"), "{}", lines[0].battery);
+    }
 }
